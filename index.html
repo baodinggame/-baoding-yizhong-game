@@ -6,7 +6,7 @@
 <div class="hud"><div class="stat" id="chapterLabel">🏫 第一章：校门夺还战</div><div class="stat">⭐ 总得分：<span id="score">0</span></div><div class="stat">🐦 剩余小鸟：<span id="birds">5</span></div></div>
 <canvas id="game" width="960" height="540" aria-label="弹弓闯关游戏画面"></canvas><div id="message" aria-live="polite">按住红色小鸟向后拖动，松开即可发射！击败本章所有敌人通关。</div>
 <div class="controls"><button id="fire" disabled>发射小鸟</button><button id="birdCount" class="gold">小鸟数量：5只（点击调整）</button><button id="restart" class="secondary">重玩本章</button><button id="newGame" class="secondary">重新开始游戏</button></div>
-<p class="hint">操作：手指/鼠标按住弹弓上的红鸟，向左或向下拖动蓄力后松开。也可以先拖动，再点“发射小鸟”。每个目标每只小鸟只会造成一次有效撞击。小鸟数量可在 3、5、8 只之间切换。</p>
+<p class="hint">操作：手指/鼠标按住弹弓上的红鸟，向左或向下拖动蓄力后松开。也可以先拖动，再点“发射小鸟”。所有小怪均为1 HP，BOSS为3 HP。每个目标每只小鸟只会造成一次有效撞击。小鸟数量可在 3、5、8 只之间切换。</p>
 <div id="nextPanel"><h2 id="resultTitle">🏆 本章通关！</h2><p id="resultText">敌方防线已被突破！</p><strong id="nextName">下一站：第二章</strong><br><button id="next" style="margin-top:10px">进入下一章 ➜</button></div>
 </section><footer>本页面为校园主题原创同人小游戏概念作品，与学校官方无关。</footer></main>
 <script>
@@ -15,34 +15,36 @@
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),W=960,H=540,ground=455,sling={x:170,y:365};
 const $=id=>document.getElementById(id);
 const levels=[
- {name:'校门夺还战',place:'保定一中校门',bossHp:4,gruntHp:2,blocks:5,sky:['#83cef2','#e8f3d9'],boss:'校门守卫'},
- {name:'教学楼反击战',place:'教学楼',bossHp:5,gruntHp:2,blocks:6,sky:['#9bc9ee','#f2e7c7'],boss:'楼顶指挥官'},
- {name:'操场突围战',place:'校园操场',bossHp:6,gruntHp:3,blocks:7,sky:['#77c9dc','#e5f4d5'],boss:'操场巨猪'},
- {name:'图书馆守护战',place:'图书馆',bossHp:7,gruntHp:3,blocks:8,sky:['#9db9e8','#f4e5d2'],boss:'知识守卫'},
- {name:'最终决战',place:'校园中心广场',bossHp:9,gruntHp:4,blocks:9,sky:['#758fca','#f4d6b0'],boss:'永恩大魔王'}
+ {name:'校门夺还战',place:'保定一中校门',bossHp:3,gruntHp:1,blocks:5,sky:['#83cef2','#e8f3d9'],boss:'校门守卫'},
+ {name:'教学楼反击战',place:'教学楼',bossHp:3,gruntHp:1,blocks:6,sky:['#9bc9ee','#f2e7c7'],boss:'楼顶指挥官'},
+ {name:'操场突围战',place:'校园操场',bossHp:3,gruntHp:1,blocks:7,sky:['#77c9dc','#e5f4d5'],boss:'操场巨猪'},
+ {name:'图书馆守护战',place:'图书馆',bossHp:3,gruntHp:1,blocks:8,sky:['#9db9e8','#f4e5d2'],boss:'知识守卫'},
+ {name:'最终决战',place:'校园中心广场',bossHp:3,gruntHp:1,blocks:9,sky:['#758fca','#f4d6b0'],boss:'永恩大魔王'}
 ];
 let chapter=0,birdCount=5,birds=[],blocks=[],pigs=[],particles=[],score=0,active=null,drag=false,won=false,lost=false,raf=0,last=0;
-function makeBird(){return{x:sling.x,y:sling.y,r:19,vx:0,vy:0,flying:false,used:false,hit:new Set()}}
+function makeBird(){return{x:sling.x,y:sling.y,r:19,vx:0,vy:0,flying:false,used:false,hit:new Set(),launchFrames:0}}
 function resetStage(resetScore=false){cancelAnimationFrame(raf);if(resetScore)score=0;won=false;lost=false;drag=false;active=null;particles=[];birds=Array.from({length:birdCount},makeBird);
  const lv=levels[chapter],baseX=650;blocks=[];
  for(let i=0;i<lv.blocks;i++){let col=i%3,row=Math.floor(i/3);blocks.push({id:'b'+i,x:baseX+col*82,y:ground-50-row*65,w:26+(i%2)*12,h:50+(i%2)*15,hp:2+Math.floor(chapter/2)})}
  blocks.push({id:'top',x:710,y:ground-190,w:190,h:20,hp:2+Math.floor(chapter/2)});
  pigs=[{id:'p1',x:735,y:ground-24,r:22,hp:lv.gruntHp,boss:false},{id:'boss',x:790,y:ground-220,r:30,hp:lv.bossHp,boss:true}];
- $('nextPanel').style.display='none';$('message').textContent='瞄准敌人！每个目标不会被同一只小鸟重复扣血。';$('chapterLabel').textContent=`🏫 第${chapter+1}章：${lv.name}`;$('birdCount').textContent=`小鸟数量：${birdCount}只（点击调整）`;
+ $('nextPanel').style.display='none';$('message').textContent='瞄准敌人！所有小怪均为1 HP，BOSS为3 HP；拖动松手即可发射。';$('chapterLabel').textContent=`🏫 第${chapter+1}章：${lv.name}`;$('birdCount').textContent=`小鸟数量：${birdCount}只（点击调整）`;
  update();draw();last=0;raf=requestAnimationFrame(loop)}
 function update(){$('score').textContent=score;$('birds').textContent=birds.filter(b=>!b.used).length;$('fire').disabled=!(active&&drag)}
 function pos(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
-canvas.addEventListener('pointerdown',e=>{if(won||lost)return;const p=pos(e);let b=birds.find(x=>!x.used&&!x.flying);if(b&&Math.hypot(p.x-b.x,p.y-b.y)<46){active=b;drag=true;canvas.setPointerCapture(e.pointerId)}});
-canvas.addEventListener('pointermove',e=>{if(!drag||!active)return;const p=pos(e);let dx=p.x-sling.x,dy=p.y-sling.y,d=Math.hypot(dx,dy);if(d>105){dx*=105/d;dy*=105/d}active.x=sling.x+dx;active.y=sling.y+dy;draw();update()});
-canvas.addEventListener('pointerup',fire);canvas.addEventListener('pointercancel',fire);
-function fire(){if(!drag||!active)return;drag=false;const b=active,dx=sling.x-b.x,dy=sling.y-b.y;if(Math.hypot(dx,dy)<10){b.x=sling.x;b.y=sling.y;active=null;draw();update();return}b.vx=dx*.19;b.vy=dy*.19;b.flying=true;b.used=true;active=null;$('message').textContent='小鸟出击！击中目标可以削弱敌人。';update()}
+let activePointerId=null;
+canvas.addEventListener('pointerdown',e=>{if(won||lost)return;e.preventDefault();const p=pos(e);let b=birds.find(x=>!x.used&&!x.flying);if(b&&Math.hypot(p.x-b.x,p.y-b.y)<48){active=b;drag=true;activePointerId=e.pointerId;try{canvas.setPointerCapture(e.pointerId)}catch(_){} }});
+canvas.addEventListener('pointermove',e=>{if(!drag||!active|| (activePointerId!==null&&e.pointerId!==activePointerId))return;e.preventDefault();const p=pos(e);let dx=p.x-sling.x,dy=p.y-sling.y,d=Math.hypot(dx,dy);if(d>120){dx*=120/d;dy*=120/d}active.x=sling.x+dx;active.y=sling.y+dy;draw();update()});
+canvas.addEventListener('pointerup',e=>{if(activePointerId!==null&&e.pointerId!==activePointerId)return;e.preventDefault();fire()});
+canvas.addEventListener('pointercancel',e=>{if(activePointerId!==null&&e.pointerId!==activePointerId)return;fire()});
+function fire(){if(!drag||!active)return;drag=false;activePointerId=null;const b=active,dx=sling.x-b.x,dy=sling.y-b.y,d=Math.hypot(dx,dy);if(d<6){b.x=sling.x;b.y=sling.y;active=null;draw();update();return}const power=Math.max(0.26,Math.min(0.34,d*0.003));b.vx=dx*power;b.vy=dy*power;b.flying=true;b.used=true;b.launchFrames=0;active=null;$('message').textContent='小鸟出击！击中目标可以削弱敌人。';update();draw()}
 $('fire').onclick=fire;$('restart').onclick=()=>resetStage(false);$('newGame').onclick=()=>{chapter=0;resetStage(true)};
 $('birdCount').onclick=()=>{birdCount=birdCount===3?5:birdCount===5?8:3;$('birdCount').textContent=`小鸟数量：${birdCount}只（点击调整）`;resetStage(false);$('message').textContent=`已调整为${birdCount}只小鸟，本章重新开始！`};
 $('next').onclick=()=>{if(chapter<levels.length-1){chapter++;resetStage(false);$('message').textContent=`第${chapter+1}章开始：${levels[chapter].name}！`}else{$('message').textContent='🎉 五章全部完成！你守护了整个校园！';$('nextPanel').style.display='none'}};
 function burst(x,y,color){for(let i=0;i<10;i++)particles.push({x,y,vx:(Math.random()-.5)*7,vy:(Math.random()-.8)*7,t:32,color})}
 function circleRect(b,o){const cx=Math.max(o.x,Math.min(b.x,o.x+o.w)),cy=Math.max(o.y,Math.min(b.y,o.y+o.h));return Math.hypot(b.x-cx,b.y-cy)<b.r}
 function collide(b){for(const o of blocks){if(o.hp>0&&!b.hit.has(o.id)&&circleRect(b,o)){b.hit.add(o.id);o.hp--;score+=100;b.vx*=.68;b.vy=-Math.abs(b.vy)*.35;burst(b.x,b.y,'#b77b43')}}for(const p of pigs){if(p.hp>0&&!b.hit.has(p.id)&&Math.hypot(b.x-p.x,b.y-p.y)<b.r+p.r){b.hit.add(p.id);p.hp--;score+=p.boss?500:250;b.vx*=.58;b.vy=-Math.abs(b.vy)*.3;burst(p.x,p.y,'#65bd50')}}}
-function loop(t){const dt=Math.min((t-last)/16.67||1,2);last=t;for(const b of birds){if(!b.flying)continue;b.vy+=.36*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=.995;if(b.y+b.r>ground){b.y=ground-b.r;b.vy*=-.25;b.vx*=.78;if(Math.abs(b.vy)<1.2)b.vy=0}collide(b);if(b.x>W+80||b.x< -80||b.y>H+80||(Math.hypot(b.vx,b.vy)<.7&&b.y>=ground-b.r-2))b.flying=false}
+function loop(t){const dt=Math.min((t-last)/16.67||1,2);last=t;for(const b of birds){if(!b.flying)continue;b.launchFrames+=dt;b.vy+=.36*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=.995;if(b.y+b.r>ground){b.y=ground-b.r;b.vy*=-.25;b.vx*=.78;if(Math.abs(b.vy)<1.2)b.vy=0}collide(b);if(b.x>W+80||b.x< -80||b.y>H+80||(b.launchFrames>18&&Math.hypot(b.vx,b.vy)<.7&&b.y>=ground-b.r-2))b.flying=false}
  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.13;p.t--});particles=particles.filter(p=>p.t>0);
  if(!won&&pigs.every(p=>p.hp<=0)){won=true;$('message').textContent=chapter===4?'🎉 永恩大魔王被击败！五章全部通关！':'🎉 本章敌人全部击败！';$('resultTitle').textContent=chapter===4?'🏆 五章全部通关！':'🏆 本章通关！';$('resultText').textContent=`${levels[chapter].place}已成功守护！当前总得分：${score}`;$('nextName').textContent=chapter===4?'你已经成为校园守卫英雄！':`下一站：第${chapter+2}章 · ${levels[chapter+1].name}`;$('next').textContent=chapter===4?'完成冒险':'进入下一章 ➜';$('nextPanel').style.display='block'}
  if(!won&&birds.every(b=>b.used&&!b.flying)&&!lost){lost=true;$('message').textContent='小鸟用完了！可点击“重玩本章”，或增加小鸟数量再挑战。'}
