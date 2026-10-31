@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#183b58"><title>保定一中假期保卫战</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#102c46,#28627b);color:#f7fbff;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;min-height:100vh}main{width:min(1000px,96vw);margin:auto;padding:18px 0 34px}header{text-align:center;margin-bottom:14px}h1{font-size:clamp(25px,5vw,42px);margin:4px 0;color:#ffe28a;text-shadow:0 3px 0 #794d2a}header p{margin:6px 0;color:#d4e8f2}.panel{background:#f7f2e6;color:#203448;border:4px solid #d4ad68;border-radius:18px;padding:12px;box-shadow:0 12px 30px #071a2c88}.hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}.stat{background:#e5edf0;border-radius:10px;padding:8px 11px;font-weight:700}canvas{display:block;width:100%;height:auto;border-radius:12px;border:2px solid #9c8157;background:#a9dff5;touch-action:none}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}button{border:0;border-radius:11px;padding:11px 14px;background:#d74c3f;color:white;font-weight:800;font-size:14px;cursor:pointer}button.secondary{background:#315c72}button.gold{background:#b47a20}button:disabled{opacity:.45;cursor:not-allowed}#message{font-weight:700;min-height:28px;margin:10px 2px 0;line-height:1.5}.hint{font-size:13px;color:#526779;line-height:1.6}#nextPanel{display:none;text-align:center;background:#fff3c8;border-radius:14px;padding:15px;margin-top:12px}#nextPanel h2{margin:0 0 6px;color:#8d4b1d}footer{text-align:center;color:#c5dce8;font-size:12px;margin-top:14px}
+</style></head><body><main><header><h1>🐦 保定一中假期保卫战</h1><p>校园主题弹射闯关小游戏 · 五章完整冒险</p></header><section class="panel">
+<div class="hud"><div class="stat" id="chapterLabel">🏫 第一章：校门夺还战</div><div class="stat">⭐ 总得分：<span id="score">0</span></div><div class="stat">🐦 剩余小鸟：<span id="birds">5</span></div></div>
+<canvas id="game" width="960" height="540" aria-label="弹弓闯关游戏画面"></canvas><div id="message" aria-live="polite">按住红色小鸟向后拖动，松开即可发射！击败本章所有敌人通关。</div>
+<div class="controls"><button id="fire" disabled>发射小鸟</button><button id="birdCount" class="gold">小鸟数量：5只（点击调整）</button><button id="restart" class="secondary">重玩本章</button><button id="newGame" class="secondary">重新开始游戏</button></div>
+<p class="hint">操作：手指/鼠标按住弹弓上的红鸟，向左或向下拖动蓄力后松开。也可以先拖动，再点“发射小鸟”。每个目标每只小鸟只会造成一次有效撞击。小鸟数量可在 3、5、8 只之间切换。</p>
+<div id="nextPanel"><h2 id="resultTitle">🏆 本章通关！</h2><p id="resultText">敌方防线已被突破！</p><strong id="nextName">下一站：第二章</strong><br><button id="next" style="margin-top:10px">进入下一章 ➜</button></div>
+</section><footer>本页面为校园主题原创同人小游戏概念作品，与学校官方无关。</footer></main>
+<script>
+(()=>{
+'use strict';
+const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),W=960,H=540,ground=455,sling={x:170,y:365};
+const $=id=>document.getElementById(id);
+const levels=[
+ {name:'校门夺还战',place:'保定一中校门',bossHp:4,gruntHp:2,blocks:5,sky:['#83cef2','#e8f3d9'],boss:'校门守卫'},
+ {name:'教学楼反击战',place:'教学楼',bossHp:5,gruntHp:2,blocks:6,sky:['#9bc9ee','#f2e7c7'],boss:'楼顶指挥官'},
+ {name:'操场突围战',place:'校园操场',bossHp:6,gruntHp:3,blocks:7,sky:['#77c9dc','#e5f4d5'],boss:'操场巨猪'},
+ {name:'图书馆守护战',place:'图书馆',bossHp:7,gruntHp:3,blocks:8,sky:['#9db9e8','#f4e5d2'],boss:'知识守卫'},
+ {name:'最终决战',place:'校园中心广场',bossHp:9,gruntHp:4,blocks:9,sky:['#758fca','#f4d6b0'],boss:'永恩大魔王'}
+];
+let chapter=0,birdCount=5,birds=[],blocks=[],pigs=[],particles=[],score=0,active=null,drag=false,won=false,lost=false,raf=0,last=0;
+function makeBird(){return{x:sling.x,y:sling.y,r:19,vx:0,vy:0,flying:false,used:false,hit:new Set()}}
+function resetStage(resetScore=false){cancelAnimationFrame(raf);if(resetScore)score=0;won=false;lost=false;drag=false;active=null;particles=[];birds=Array.from({length:birdCount},makeBird);
+ const lv=levels[chapter],baseX=650;blocks=[];
+ for(let i=0;i<lv.blocks;i++){let col=i%3,row=Math.floor(i/3);blocks.push({id:'b'+i,x:baseX+col*82,y:ground-50-row*65,w:26+(i%2)*12,h:50+(i%2)*15,hp:2+Math.floor(chapter/2)})}
+ blocks.push({id:'top',x:710,y:ground-190,w:190,h:20,hp:2+Math.floor(chapter/2)});
+ pigs=[{id:'p1',x:735,y:ground-24,r:22,hp:lv.gruntHp,boss:false},{id:'boss',x:790,y:ground-220,r:30,hp:lv.bossHp,boss:true}];
+ $('nextPanel').style.display='none';$('message').textContent='瞄准敌人！每个目标不会被同一只小鸟重复扣血。';$('chapterLabel').textContent=`🏫 第${chapter+1}章：${lv.name}`;$('birdCount').textContent=`小鸟数量：${birdCount}只（点击调整）`;
+ update();draw();last=0;raf=requestAnimationFrame(loop)}
+function update(){$('score').textContent=score;$('birds').textContent=birds.filter(b=>!b.used).length;$('fire').disabled=!(active&&drag)}
+function pos(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+canvas.addEventListener('pointerdown',e=>{if(won||lost)return;const p=pos(e);let b=birds.find(x=>!x.used&&!x.flying);if(b&&Math.hypot(p.x-b.x,p.y-b.y)<46){active=b;drag=true;canvas.setPointerCapture(e.pointerId)}});
+canvas.addEventListener('pointermove',e=>{if(!drag||!active)return;const p=pos(e);let dx=p.x-sling.x,dy=p.y-sling.y,d=Math.hypot(dx,dy);if(d>105){dx*=105/d;dy*=105/d}active.x=sling.x+dx;active.y=sling.y+dy;draw();update()});
+canvas.addEventListener('pointerup',fire);canvas.addEventListener('pointercancel',fire);
+function fire(){if(!drag||!active)return;drag=false;const b=active,dx=sling.x-b.x,dy=sling.y-b.y;if(Math.hypot(dx,dy)<10){b.x=sling.x;b.y=sling.y;active=null;draw();update();return}b.vx=dx*.19;b.vy=dy*.19;b.flying=true;b.used=true;active=null;$('message').textContent='小鸟出击！击中目标可以削弱敌人。';update()}
+$('fire').onclick=fire;$('restart').onclick=()=>resetStage(false);$('newGame').onclick=()=>{chapter=0;resetStage(true)};
+$('birdCount').onclick=()=>{birdCount=birdCount===3?5:birdCount===5?8:3;$('birdCount').textContent=`小鸟数量：${birdCount}只（点击调整）`;resetStage(false);$('message').textContent=`已调整为${birdCount}只小鸟，本章重新开始！`};
+$('next').onclick=()=>{if(chapter<levels.length-1){chapter++;resetStage(false);$('message').textContent=`第${chapter+1}章开始：${levels[chapter].name}！`}else{$('message').textContent='🎉 五章全部完成！你守护了整个校园！';$('nextPanel').style.display='none'}};
+function burst(x,y,color){for(let i=0;i<10;i++)particles.push({x,y,vx:(Math.random()-.5)*7,vy:(Math.random()-.8)*7,t:32,color})}
+function circleRect(b,o){const cx=Math.max(o.x,Math.min(b.x,o.x+o.w)),cy=Math.max(o.y,Math.min(b.y,o.y+o.h));return Math.hypot(b.x-cx,b.y-cy)<b.r}
+function collide(b){for(const o of blocks){if(o.hp>0&&!b.hit.has(o.id)&&circleRect(b,o)){b.hit.add(o.id);o.hp--;score+=100;b.vx*=.68;b.vy=-Math.abs(b.vy)*.35;burst(b.x,b.y,'#b77b43')}}for(const p of pigs){if(p.hp>0&&!b.hit.has(p.id)&&Math.hypot(b.x-p.x,b.y-p.y)<b.r+p.r){b.hit.add(p.id);p.hp--;score+=p.boss?500:250;b.vx*=.58;b.vy=-Math.abs(b.vy)*.3;burst(p.x,p.y,'#65bd50')}}}
+function loop(t){const dt=Math.min((t-last)/16.67||1,2);last=t;for(const b of birds){if(!b.flying)continue;b.vy+=.36*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=.995;if(b.y+b.r>ground){b.y=ground-b.r;b.vy*=-.25;b.vx*=.78;if(Math.abs(b.vy)<1.2)b.vy=0}collide(b);if(b.x>W+80||b.x< -80||b.y>H+80||(Math.hypot(b.vx,b.vy)<.7&&b.y>=ground-b.r-2))b.flying=false}
+ particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.13;p.t--});particles=particles.filter(p=>p.t>0);
+ if(!won&&pigs.every(p=>p.hp<=0)){won=true;$('message').textContent=chapter===4?'🎉 永恩大魔王被击败！五章全部通关！':'🎉 本章敌人全部击败！';$('resultTitle').textContent=chapter===4?'🏆 五章全部通关！':'🏆 本章通关！';$('resultText').textContent=`${levels[chapter].place}已成功守护！当前总得分：${score}`;$('nextName').textContent=chapter===4?'你已经成为校园守卫英雄！':`下一站：第${chapter+2}章 · ${levels[chapter+1].name}`;$('next').textContent=chapter===4?'完成冒险':'进入下一章 ➜';$('nextPanel').style.display='block'}
+ if(!won&&birds.every(b=>b.used&&!b.flying)&&!lost){lost=true;$('message').textContent='小鸟用完了！可点击“重玩本章”，或增加小鸟数量再挑战。'}
+ update();draw();raf=requestAnimationFrame(loop)}
+function draw(){ctx.clearRect(0,0,W,H);const lv=levels[chapter],sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,lv.sky[0]);sky.addColorStop(1,lv.sky[1]);ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#fff';[[100,85],[360,110],[840,80]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,25,0,7);ctx.arc(x+28,y-8,30,0,7);ctx.arc(x+55,y,23,0,7);ctx.fill()});ctx.fillStyle='#6da95b';ctx.fillRect(0,ground,W,H-ground);ctx.fillStyle='#477e42';ctx.fillRect(0,ground,W,9);
+ ctx.fillStyle='#d9d1bb';ctx.fillRect(545,205,360,250);ctx.fillStyle=chapter===4?'#8b3c3c':'#a8493d';ctx.fillRect(530,188,390,22);ctx.fillStyle='#fff0ce';ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.fillText(lv.place,725,235);ctx.fillStyle='#52677d';ctx.fillRect(610,270,90,185);ctx.fillRect(755,270,90,185);ctx.strokeStyle='#d4b58a';ctx.lineWidth=6;for(let x=625;x<700;x+=20){ctx.beginPath();ctx.moveTo(x,270);ctx.lineTo(x,455);ctx.stroke()}
+ ctx.strokeStyle='#81512b';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(145,450);ctx.lineTo(170,350);ctx.lineTo(195,450);ctx.stroke();ctx.strokeStyle='#e8c28a';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(170,350);ctx.lineTo(active&&drag?active.x:170,active&&drag?active.y:365);ctx.stroke();
+ blocks.forEach(o=>{if(o.hp<=0)return;ctx.fillStyle='#b9824b';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.strokeStyle='#70472b';ctx.lineWidth=3;ctx.strokeRect(o.x,o.y,o.w,o.h)});
+ pigs.forEach(p=>{if(p.hp<=0)return;ctx.fillStyle='#59bd4d';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(p.x-10,p.y-7,6,0,7);ctx.arc(p.x+10,p.y-7,6,0,7);ctx.fill();ctx.fillStyle='#253b28';ctx.beginPath();ctx.arc(p.x-10,p.y-7,2.5,0,7);ctx.arc(p.x+10,p.y-7,2.5,0,7);ctx.fill();ctx.fillStyle='#a3e28d';ctx.beginPath();ctx.ellipse(p.x,p.y+8,12,8,0,0,7);ctx.fill();ctx.fillStyle='#263a28';ctx.font='bold 13px sans-serif';ctx.fillText(p.boss?`${lv.boss} ${p.hp} HP`:`梁式小怪 ${p.hp} HP`,p.x,p.y-p.r-8)});
+ birds.forEach(b=>{if(b.used&&!b.flying)return;ctx.fillStyle='#e43d35';ctx.beginPath();ctx.arc(b.x,b.y,19,0,7);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(b.x+6,b.y-5,6,0,7);ctx.fill();ctx.fillStyle='#222';ctx.beginPath();ctx.arc(b.x+8,b.y-5,2.5,0,7);ctx.fill();ctx.fillStyle='#f4bd3f';ctx.beginPath();ctx.moveTo(b.x+15,b.y);ctx.lineTo(b.x+29,b.y+5);ctx.lineTo(b.x+15,b.y+8);ctx.fill()});
+ particles.forEach(p=>{ctx.globalAlpha=p.t/32;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,7,7);ctx.globalAlpha=1});if(won){ctx.fillStyle='#15352bcc';ctx.fillRect(240,160,480,130);ctx.fillStyle='white';ctx.font='bold 34px sans-serif';ctx.fillText(chapter===4?'五章全部通关！':'本章完美通关！',480,215);ctx.font='20px sans-serif';ctx.fillText('校园防线已守护！',480,255)}}
+resetStage(true);
+})();
+</script></body></html>
