@@ -1,69 +1,1789 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#183b58"><title>保定一中假期保卫战</title>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12314a">
+<title>保定一中假期保卫战 v17 · 手感优化版</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#102c46,#28627b);color:#f7fbff;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;min-height:100vh}main{width:min(1000px,96vw);margin:auto;padding:18px 0 34px}header{text-align:center;margin-bottom:14px}h1{font-size:clamp(25px,5vw,42px);margin:4px 0;color:#ffe28a;text-shadow:0 3px 0 #794d2a}header p{margin:6px 0;color:#d4e8f2}.panel{background:#f7f2e6;color:#203448;border:4px solid #d4ad68;border-radius:18px;padding:12px;box-shadow:0 12px 30px #071a2c88}.hud{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}.stat{background:#e5edf0;border-radius:10px;padding:8px 11px;font-weight:700}canvas{display:block;width:100%;height:auto;border-radius:12px;border:2px solid #9c8157;background:#a9dff5;touch-action:none}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}button{border:0;border-radius:11px;padding:11px 14px;background:#d74c3f;color:white;font-weight:800;font-size:14px;cursor:pointer}button.secondary{background:#315c72}button.gold{background:#b47a20}button:disabled{opacity:.45;cursor:not-allowed}#message{font-weight:700;min-height:28px;margin:10px 2px 0;line-height:1.5}.hint{font-size:13px;color:#526779;line-height:1.6}#nextPanel{display:none;text-align:center;background:#fff3c8;border-radius:14px;padding:15px;margin-top:12px}#nextPanel h2{margin:0 0 6px;color:#8d4b1d}footer{text-align:center;color:#c5dce8;font-size:12px;margin-top:14px}
-</style></head><body><main><header><h1>🐦 保定一中假期保卫战</h1><p>校园主题弹射闯关小游戏 · 五章完整冒险</p></header><section class="panel">
-<div class="hud"><div class="stat" id="chapterLabel">🏫 第一章：校门夺还战</div><div class="stat">⭐ 总得分：<span id="score">0</span></div><div class="stat">🐦 剩余小鸟：<span id="birds">5</span></div></div>
-<canvas id="game" width="960" height="540" aria-label="弹弓闯关游戏画面"></canvas><div id="message" aria-live="polite">按住红色小鸟向后拖动，松开即可发射！击败本章所有敌人通关。</div>
-<div class="controls"><button id="fire" disabled>发射小鸟</button><button id="birdCount" class="gold">小鸟数量：5只（点击调整）</button><button id="restart" class="secondary">重玩本章</button><button id="newGame" class="secondary">重新开始游戏</button></div>
-<p class="hint">操作：手指/鼠标按住弹弓上的红鸟，向左或向下拖动蓄力后松开。也可以先拖动，再点“发射小鸟”。所有小怪均为1 HP，BOSS为3 HP。每个目标每只小鸟只会造成一次有效撞击。小鸟数量可在 3、5、8 只之间切换。</p>
-<div id="nextPanel"><h2 id="resultTitle">🏆 本章通关！</h2><p id="resultText">敌方防线已被突破！</p><strong id="nextName">下一站：第二章</strong><br><button id="next" style="margin-top:10px">进入下一章 ➜</button></div>
-</section><footer>本页面为校园主题原创同人小游戏概念作品，与学校官方无关。</footer></main>
+:root{--ink:#1c3247;--paper:#f8f3e6;--line:#d9b678;--accent:#e2503f;--gold:#c98a2a;--teal:#2f6079}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 18% 0%,#2d6d8f 0%,#14304a 46%,#0a1b2b 100%);color:#eaf4fb;font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+main{width:min(1040px,96vw);margin:0 auto;padding:16px 0 30px}
+header{text-align:center;margin-bottom:12px}
+h1{font-size:clamp(22px,4.6vw,38px);margin:6px 0;color:#ffe28a;text-shadow:0 3px 0 #7a4a20,0 10px 26px #0007;letter-spacing:1px}
+.sub{margin:0;color:#b9d6e8;font-size:13px}
+.panel{background:var(--paper);color:var(--ink);border:3px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 18px 44px #04101f99}
+.hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:9px}
+.stat{background:#e9eff2;border-radius:11px;padding:6px 10px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.stat .k{font-size:11px;color:#63798b;letter-spacing:.4px}
+.stat b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.chapters{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:9px}
+.chap{background:#e3ebee;border:0;border-radius:10px;padding:5px 2px;color:#43606f;font:inherit;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:0;font-size:11px;line-height:1.25;box-shadow:none;transition:background .15s,color .15s}
+.chap b{font-size:13px}
+.chap span{font-size:10px;letter-spacing:1px}
+.chap.on{background:var(--teal);color:#fff;box-shadow:0 3px 0 #1d4053}
+.chap:disabled{opacity:.45;cursor:not-allowed}
+.stage{position:relative;border-radius:12px;overflow:hidden;border:2px solid #9c8157;background:#a9dff5;box-shadow:inset 0 0 0 3px #ffffff66}
+canvas{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+canvas:active{cursor:grabbing}
+.stage-tip{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#102833b3;color:#fff;font-size:12px;padding:5px 12px;border-radius:99px;pointer-events:none;transition:opacity .45s;white-space:nowrap}
+.stage-tip.hide{opacity:0}
+#message{margin:10px 2px 0;font-weight:700;min-height:22px;line-height:1.45;font-size:14px;color:#1c3247}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+button{border:0;border-radius:11px;padding:10px 14px;font:inherit;font-weight:800;font-size:13.5px;cursor:pointer;color:#fff;background:#d74c3f;box-shadow:0 3px 0 #a23226;transition:transform .06s,box-shadow .06s,filter .15s}
+button:hover{filter:brightness(1.06)}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #0003}
+button:disabled{opacity:.42;cursor:not-allowed;box-shadow:none;filter:grayscale(.4)}
+button:focus-visible{outline:3px solid #ffd34d;outline-offset:2px}
+.secondary{background:#39647c;box-shadow:0 3px 0 #23414f}
+.gold{background:var(--gold);box-shadow:0 3px 0 #8a5a12}
+.cheat{background:linear-gradient(135deg,#ff1744,#8e24aa);box-shadow:0 3px 0 #5b1160}
+.cheat[aria-pressed="true"]{background:linear-gradient(135deg,#00c853,#00695c);box-shadow:0 3px 0 #00453a}
+.extra{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:9px}
+.pill{background:#e3ebee;border-radius:99px;padding:5px 11px;font-size:12px;font-weight:700;color:#3d5b6b;font-variant-numeric:tabular-nums}
+button.ghost{background:#e3ebee;color:#33505f;box-shadow:none;padding:6px 11px;font-size:12px;font-weight:700}
+button.ghost[aria-pressed="true"]{background:#ffe0b2;color:#8a4b00}
+button.ghost:active{transform:translateY(1px)}
+.meter{height:8px;background:#dbe3e6;border-radius:99px;overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38c172,#f4c542,#f0623a);border-radius:99px;transition:width .06s linear}
+.achievements{margin-top:10px;padding:9px 10px;border-radius:12px;background:#e9eef0;font-size:12px}
+.achievements strong{display:block;font-size:12px;color:#43606f}
+.achievement-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.achievement{background:#fff;border:1px dashed #b9c7ce;border-radius:99px;padding:4px 9px;opacity:.55;color:#4c6473}
+.achievement.unlocked{opacity:1;background:#fff8e1;border-color:#e5b84b;color:#7a4c00;font-weight:700}
+.hint{font-size:12px;line-height:1.65;color:#5b7180;margin:10px 2px 0}
+.result{margin-top:11px;background:#fff9ea;border:2px dashed #d9b678;border-radius:14px;padding:12px;text-align:center;animation:pop .26s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.result h2{margin:0 0 3px;font-size:19px;color:#a8581c}
+.result p{margin:6px 0;font-size:13.5px;color:#4a5f6d;line-height:1.55}
+.stars{font-size:30px;letter-spacing:8px;line-height:1.1;color:#cfd8dd}
+.stars .on{color:#f2b632;text-shadow:0 2px 0 #b07c12}
+.result strong{display:block;margin:6px 0 9px;color:#2f6079;font-size:13.5px}
+.lose{border-color:#e0a0a0;background:#fff4f2}
+.lose h2{color:#b23b2e}
+footer{text-align:center;color:#87a7bb;font-size:11.5px;margin-top:14px;line-height:1.6}
+.toast{position:fixed;right:14px;top:12px;transform:translateY(-18px);background:#102a3ceb;color:#ffe9a8;padding:9px 16px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:99;border:1px solid #ffe9a84d;max-width:min(92vw,420px);text-align:right}
+.toast.show{opacity:1;transform:translateY(0)}
+@media (max-width:640px){
+  main{padding-top:10px}
+  .panel{padding:9px;border-radius:14px}
+  .hud{grid-template-columns:repeat(2,1fr)}
+  .stat b{font-size:14px}
+  button{padding:9px 11px;font-size:12.5px}
+  .hint{font-size:11.5px}
+  .chap{font-size:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🐦 保定一中假期保卫战</h1>
+    <p class="sub">校园主题弹射闯关 · 五章冒险 · <b>v17 手感 / 性能优化版</b></p>
+  </header>
+
+  <section class="panel">
+    <div class="hud">
+      <div class="stat"><span class="k">章节</span><b id="chapterLabel">第一章 · 校门夺还战</b></div>
+      <div class="stat"><span class="k">总得分</span><b id="score">0</b></div>
+      <div class="stat"><span class="k">剩余小鸟</span><b id="birds">5</b></div>
+      <div class="stat"><span class="k">连击</span><b id="comboText">0</b></div>
+    </div>
+
+    <nav class="chapters" id="chapterNav" aria-label="章节选择"></nav>
+
+    <div class="stage">
+      <canvas id="game" width="960" height="540" role="img" aria-label="弹弓闯关游戏画面"></canvas>
+      <div class="stage-tip" id="stageTip">按住红色小鸟向后拖 · 松手发射</div>
+    </div>
+
+    <div id="message" role="status" aria-live="polite">按住红色小鸟向后拖，松手发射！击败本章所有敌人即可通关。</div>
+
+    <div class="controls">
+      <button id="fire" disabled>🚀 发射小鸟</button>
+      <button id="birdCount" class="gold">🐦 每局 5 只</button>
+      <button id="restart" class="secondary">↻ 重玩本章</button>
+      <button id="newGame" class="secondary">🏠 重新开始</button>
+      <button id="cheat" class="cheat" aria-pressed="false">😈 作弊：关</button>
+    </div>
+
+    <div class="extra">
+      <span class="pill" id="powerText">蓄力 0%</span>
+      <span class="pill" id="progressText">敌方 0/2</span>
+      <span class="pill" id="bestText">🏆 最高分 0</span>
+      <button id="sound" class="ghost" aria-pressed="true">🔊 音效开</button>
+      <button id="pause" class="ghost" aria-pressed="false">⏸ 暂停</button>
+    </div>
+    <div class="meter" aria-label="蓄力程度"><i id="powerFill"></i></div>
+
+    <div class="achievements">
+      <strong>🏅 成就收藏 <span id="achievementCount">0/7</span></strong>
+      <div class="achievement-list" id="achievementList"></div>
+    </div>
+
+    <p class="hint">
+      拖得越远威力越大，松手前会显示实时弹道。同一只小鸟对同一个目标只结算一次伤害；满力直击 BOSS 可造成 2 点伤害；打塌木块还能砸伤甚至压死敌人。
+      快捷键：空格发射 · P 暂停 · R 重玩 · M 静音。
+    </p>
+
+    <div id="nextPanel" class="result" hidden>
+      <h2 id="resultTitle">🏆 本章通关！</h2>
+      <div class="stars" id="starRow"><span>★</span><span>★</span><span>★</span></div>
+      <p id="resultText"></p>
+      <strong id="nextName"></strong>
+      <button id="next">进入下一章 ➜</button>
+    </div>
+
+    <div id="losePanel" class="result lose" hidden>
+      <h2>😵 小鸟用完了</h2>
+      <p>防线还没拿下。换个角度、加点小鸟，或者打开作弊模式爽一把。</p>
+      <button id="retry" class="secondary">↻ 再试一次</button>
+    </div>
+  </section>
+
+  <footer>v17 · 单文件离线小游戏，与学校官方无关 · 存档保存在本机浏览器</footer>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 <script>
-(()=>{
+(() => {
 'use strict';
-const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),W=960,H=540,ground=455,sling={x:170,y:365};
-const $=id=>document.getElementById(id);
-const levels=[
- {name:'校门夺还战',place:'保定一中校门',bossHp:3,gruntHp:1,blocks:5,sky:['#83cef2','#e8f3d9'],boss:'永恩大魔王'},
- {name:'教学楼反击战',place:'教学楼',bossHp:3,gruntHp:1,blocks:6,sky:['#9bc9ee','#f2e7c7'],boss:'永恩大魔王'},
- {name:'操场突围战',place:'校园操场',bossHp:3,gruntHp:1,blocks:7,sky:['#77c9dc','#e5f4d5'],boss:'永恩大魔王'},
- {name:'图书馆守护战',place:'图书馆',bossHp:3,gruntHp:1,blocks:8,sky:['#9db9e8','#f4e5d2'],boss:'永恩大魔王'},
- {name:'最终决战',place:'校园中心广场',bossHp:3,gruntHp:1,blocks:9,sky:['#758fca','#f4d6b0'],boss:'永恩大魔王'}
+
+/* ========================================================================
+   1. 常量与调参
+   ======================================================================== */
+const W = 960, H = 540, GROUND = 455, TAU = Math.PI * 2;
+const SLING = { x: 168, y: 335 };      // 弹弓皮兜位置
+const PULL_FLOOR = GROUND - 21;        // 皮兜最低点（不钻进地里）
+const MAX_PULL = 132;                  // 最大拉伸距离(px)
+const SPEED_MIN = 320;                 // 最小出膛速度(px/s)
+const SPEED_MAX = 1250;                // 满弓出膛速度(px/s)
+const POWER_CURVE = 1.15;              // 蓄力曲线：前段更细腻，后段更暴力
+const GRAVITY = 1450;                  // 重力加速度(px/s^2)
+const AIR_DRAG = 0.05;                 // 空气阻力系数(每秒)
+const STEP = 1 / 120;                  // 固定物理步长
+const MAX_DPR = 2;
+const SAVE_KEY = 'baoding_yizhong_game_v17';
+const OLD_KEY = 'baoding_yizhong_game_save_v14';
+
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const rnd = (a, b) => a + Math.random() * (b - a);
+const len = (x, y) => Math.hypot(x, y);
+const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* ========================================================================
+   2. 关卡数据（坐标以 960×540 画布、地面 455 为基准）
+   ======================================================================== */
+const LEVELS = [
+  {
+    name: '校门夺还战', place: '保定一中校门', decor: 'gate',
+    sky: ['#8fd8f7', '#eaf8dd'], ground: '#6fb15b', groundDark: '#4a8a44',
+    blocks: [
+      { x: 628, y: 305, w: 26, h: 150, hp: 3 },   // 左门柱
+      { x: 806, y: 305, w: 26, h: 150, hp: 3 },   // 右门柱
+      { x: 620, y: 283, w: 220, h: 22, hp: 2 }    // 门楣
+    ],
+    pigs: [
+      { x: 552, y: 431, r: 24 },
+      { x: 730, y: 253, r: 30, boss: true, hp: 3 }
+    ]
+  },
+  {
+    name: '教学楼反击战', place: '教学楼', decor: 'school',
+    sky: ['#9ccbf0', '#fbf0d6'], ground: '#74b35e', groundDark: '#4d8a46',
+    blocks: [
+      { x: 640, y: 403, w: 42, h: 52, hp: 2 }, { x: 640, y: 351, w: 42, h: 52, hp: 2 }, { x: 640, y: 299, w: 42, h: 52, hp: 2 },
+      { x: 745, y: 403, w: 42, h: 52, hp: 2 }, { x: 745, y: 351, w: 42, h: 52, hp: 2 }, { x: 745, y: 299, w: 42, h: 52, hp: 2 },
+      { x: 850, y: 403, w: 42, h: 52, hp: 2 }, { x: 850, y: 351, w: 42, h: 52, hp: 2 }, { x: 850, y: 299, w: 42, h: 52, hp: 2 },
+      { x: 630, y: 277, w: 282, h: 22, hp: 3 }    // 楼顶平台
+    ],
+    pigs: [
+      { x: 560, y: 431, r: 22 },
+      { x: 770, y: 247, r: 30, boss: true, hp: 3 },
+      { x: 870, y: 255, r: 22 }
+    ]
+  },
+  {
+    name: '操场突围战', place: '校园操场', decor: 'track',
+    sky: ['#78d2e2', '#eff9da'], ground: '#7cbb5f', groundDark: '#4f8f47',
+    blocks: [
+      { x: 620, y: 285, w: 24, h: 170, hp: 3 },   // 球门左柱
+      { x: 858, y: 285, w: 24, h: 170, hp: 3 },   // 球门右柱
+      { x: 612, y: 263, w: 278, h: 22, hp: 3 }    // 横梁
+    ],
+    pigs: [
+      { x: 470, y: 431, r: 24 },
+      { x: 560, y: 431, r: 24 },
+      { x: 710, y: 233, r: 30, boss: true, hp: 3 }
+    ]
+  },
+  {
+    name: '图书馆守护战', place: '图书馆', decor: 'library',
+    sky: ['#a9b9e9', '#f8e9d4'], ground: '#6eae63', groundDark: '#477f45',
+    blocks: [
+      { x: 640, y: 403, w: 42, h: 52, hp: 2 }, { x: 640, y: 351, w: 42, h: 52, hp: 2 }, { x: 640, y: 299, w: 42, h: 52, hp: 2 },
+      { x: 720, y: 403, w: 42, h: 52, hp: 2 }, { x: 720, y: 351, w: 42, h: 52, hp: 2 }, { x: 720, y: 299, w: 42, h: 52, hp: 2 },
+      { x: 800, y: 403, w: 42, h: 52, hp: 2 }, { x: 800, y: 351, w: 42, h: 52, hp: 2 }, { x: 800, y: 299, w: 42, h: 52, hp: 2 },
+      { x: 880, y: 403, w: 42, h: 52, hp: 2 }, { x: 880, y: 351, w: 42, h: 52, hp: 2 }, { x: 880, y: 299, w: 42, h: 52, hp: 2 },
+      { x: 630, y: 277, w: 292, h: 22, hp: 3 }
+    ],
+    pigs: [
+      { x: 570, y: 431, r: 22 },
+      { x: 780, y: 247, r: 30, boss: true, hp: 3 },
+      { x: 888, y: 255, r: 22 }
+    ]
+  },
+  {
+    name: '最终决战', place: '校园中心广场', decor: 'plaza',
+    sky: ['#8792cc', '#ffd3a8'], ground: '#7a9f5c', groundDark: '#4f7040',
+    blocks: [
+      { x: 620, y: 405, w: 90, h: 50, hp: 2 },
+      { x: 760, y: 405, w: 90, h: 50, hp: 2 },
+      { x: 690, y: 355, w: 90, h: 50, hp: 2 },
+      { x: 690, y: 305, w: 90, h: 50, hp: 2 }
+    ],
+    pigs: [
+      { x: 545, y: 431, r: 24 },
+      { x: 905, y: 431, r: 24 },
+      { x: 735, y: 275, r: 30, boss: true, hp: 3 }
+    ]
+  }
 ];
-let chapter=0,birdCount=5,birds=[],blocks=[],pigs=[],particles=[],score=0,active=null,drag=false,won=false,lost=false,raf=0,last=0;
-function makeBird(){return{x:sling.x,y:sling.y,r:19,vx:0,vy:0,flying:false,used:false,hit:new Set(),launchFrames:0}}
-function resetStage(resetScore=false){cancelAnimationFrame(raf);if(resetScore)score=0;won=false;lost=false;drag=false;active=null;particles=[];birds=Array.from({length:birdCount},makeBird);
- const lv=levels[chapter],baseX=650;blocks=[];
- for(let i=0;i<lv.blocks;i++){let col=i%3,row=Math.floor(i/3);blocks.push({id:'b'+i,x:baseX+col*82,y:ground-50-row*65,w:26+(i%2)*12,h:50+(i%2)*15,hp:2+Math.floor(chapter/2)})}
- blocks.push({id:'top',x:710,y:ground-190,w:190,h:20,hp:2+Math.floor(chapter/2)});
- pigs=[{id:'p1',x:735,y:ground-24,r:22,hp:lv.gruntHp,boss:false},{id:'boss',x:790,y:ground-220,r:30,hp:lv.bossHp,boss:true}];
- $('nextPanel').style.display='none';$('message').textContent='瞄准敌人！所有小怪均为1 HP，BOSS为3 HP；拖动松手即可发射。';$('chapterLabel').textContent=`🏫 第${chapter+1}章：${lv.name}`;$('birdCount').textContent=`小鸟数量：${birdCount}只（点击调整）`;
- update();draw();last=0;raf=requestAnimationFrame(loop)}
-function update(){$('score').textContent=score;$('birds').textContent=birds.filter(b=>!b.used).length;$('fire').disabled=!(active&&drag)}
-function pos(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
-let activePointerId=null;
-canvas.addEventListener('pointerdown',e=>{if(won||lost)return;e.preventDefault();const p=pos(e);let b=birds.find(x=>!x.used&&!x.flying);if(b&&Math.hypot(p.x-b.x,p.y-b.y)<48){active=b;drag=true;activePointerId=e.pointerId;try{canvas.setPointerCapture(e.pointerId)}catch(_){} }});
-canvas.addEventListener('pointermove',e=>{if(!drag||!active|| (activePointerId!==null&&e.pointerId!==activePointerId))return;e.preventDefault();const p=pos(e);let dx=p.x-sling.x,dy=p.y-sling.y,d=Math.hypot(dx,dy);if(d>120){dx*=120/d;dy*=120/d}active.x=sling.x+dx;active.y=sling.y+dy;draw();update()});
-canvas.addEventListener('pointerup',e=>{if(activePointerId!==null&&e.pointerId!==activePointerId)return;e.preventDefault();fire()});
-canvas.addEventListener('pointercancel',e=>{if(activePointerId!==null&&e.pointerId!==activePointerId)return;fire()});
-function fire(){if(!drag||!active)return;drag=false;activePointerId=null;const b=active,dx=sling.x-b.x,dy=sling.y-b.y,d=Math.hypot(dx,dy);if(d<6){b.x=sling.x;b.y=sling.y;active=null;draw();update();return}const power=Math.max(0.26,Math.min(0.34,d*0.003));b.vx=dx*power;b.vy=dy*power;b.flying=true;b.used=true;b.launchFrames=0;active=null;$('message').textContent='小鸟出击！击中目标可以削弱敌人。';update();draw()}
-$('fire').onclick=fire;$('restart').onclick=()=>resetStage(false);$('newGame').onclick=()=>{chapter=0;resetStage(true)};
-$('birdCount').onclick=()=>{birdCount=birdCount===3?5:birdCount===5?8:3;$('birdCount').textContent=`小鸟数量：${birdCount}只（点击调整）`;resetStage(false);$('message').textContent=`已调整为${birdCount}只小鸟，本章重新开始！`};
-$('next').onclick=()=>{if(chapter<levels.length-1){chapter++;resetStage(false);$('message').textContent=`第${chapter+1}章开始：${levels[chapter].name}！`}else{$('message').textContent='🎉 五章全部完成！你守护了整个校园！';$('nextPanel').style.display='none'}};
-function burst(x,y,color){for(let i=0;i<10;i++)particles.push({x,y,vx:(Math.random()-.5)*7,vy:(Math.random()-.8)*7,t:32,color})}
-function circleRect(b,o){const cx=Math.max(o.x,Math.min(b.x,o.x+o.w)),cy=Math.max(o.y,Math.min(b.y,o.y+o.h));return Math.hypot(b.x-cx,b.y-cy)<b.r}
-function collide(b){for(const o of blocks){if(o.hp>0&&!b.hit.has(o.id)&&circleRect(b,o)){b.hit.add(o.id);o.hp--;score+=100;b.vx*=.68;b.vy=-Math.abs(b.vy)*.35;burst(b.x,b.y,'#b77b43')}}for(const p of pigs){if(p.hp>0&&!b.hit.has(p.id)&&Math.hypot(b.x-p.x,b.y-p.y)<b.r+p.r){b.hit.add(p.id);p.hp--;score+=p.boss?500:250;b.vx*=.58;b.vy=-Math.abs(b.vy)*.3;burst(p.x,p.y,'#65bd50')}}}
-function loop(t){const dt=Math.min((t-last)/16.67||1,2);last=t;for(const b of birds){if(!b.flying)continue;b.launchFrames+=dt;b.vy+=.36*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=.995;if(b.y+b.r>ground){b.y=ground-b.r;b.vy*=-.25;b.vx*=.78;if(Math.abs(b.vy)<1.2)b.vy=0}collide(b);if(b.x>W+80||b.x< -80||b.y>H+80||(b.launchFrames>18&&Math.hypot(b.vx,b.vy)<.7&&b.y>=ground-b.r-2))b.flying=false}
- particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.13;p.t--});particles=particles.filter(p=>p.t>0);
- if(!won&&pigs.every(p=>p.hp<=0)){won=true;$('message').textContent=chapter===4?'🎉 永恩大魔王被击败！五章全部通关！':'🎉 本章敌人全部击败！';$('resultTitle').textContent=chapter===4?'🏆 五章全部通关！':'🏆 本章通关！';$('resultText').textContent=`${levels[chapter].place}已成功守护！当前总得分：${score}`;$('nextName').textContent=chapter===4?'你已经成为校园守卫英雄！':`下一站：第${chapter+2}章 · ${levels[chapter+1].name}`;$('next').textContent=chapter===4?'完成冒险':'进入下一章 ➜';$('nextPanel').style.display='block'}
- if(!won&&birds.every(b=>b.used&&!b.flying)&&!lost){lost=true;$('message').textContent='小鸟用完了！可点击“重玩本章”，或增加小鸟数量再挑战。'}
- update();draw();raf=requestAnimationFrame(loop)}
-function draw(){ctx.clearRect(0,0,W,H);const lv=levels[chapter],sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,lv.sky[0]);sky.addColorStop(1,lv.sky[1]);ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
- ctx.fillStyle='#fff';[[100,85],[360,110],[840,80]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,25,0,7);ctx.arc(x+28,y-8,30,0,7);ctx.arc(x+55,y,23,0,7);ctx.fill()});ctx.fillStyle='#6da95b';ctx.fillRect(0,ground,W,H-ground);ctx.fillStyle='#477e42';ctx.fillRect(0,ground,W,9);
- ctx.fillStyle='#d9d1bb';ctx.fillRect(545,205,360,250);ctx.fillStyle=chapter===4?'#8b3c3c':'#a8493d';ctx.fillRect(530,188,390,22);ctx.fillStyle='#fff0ce';ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.fillText(lv.place,725,235);ctx.fillStyle='#52677d';ctx.fillRect(610,270,90,185);ctx.fillRect(755,270,90,185);ctx.strokeStyle='#d4b58a';ctx.lineWidth=6;for(let x=625;x<700;x+=20){ctx.beginPath();ctx.moveTo(x,270);ctx.lineTo(x,455);ctx.stroke()}
- ctx.strokeStyle='#81512b';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(145,450);ctx.lineTo(170,350);ctx.lineTo(195,450);ctx.stroke();ctx.strokeStyle='#e8c28a';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(170,350);ctx.lineTo(active&&drag?active.x:170,active&&drag?active.y:365);ctx.stroke();
- blocks.forEach(o=>{if(o.hp<=0)return;ctx.fillStyle='#b9824b';ctx.fillRect(o.x,o.y,o.w,o.h);ctx.strokeStyle='#70472b';ctx.lineWidth=3;ctx.strokeRect(o.x,o.y,o.w,o.h)});
- pigs.forEach(p=>{if(p.hp<=0)return;ctx.fillStyle='#59bd4d';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(p.x-10,p.y-7,6,0,7);ctx.arc(p.x+10,p.y-7,6,0,7);ctx.fill();ctx.fillStyle='#253b28';ctx.beginPath();ctx.arc(p.x-10,p.y-7,2.5,0,7);ctx.arc(p.x+10,p.y-7,2.5,0,7);ctx.fill();ctx.fillStyle='#a3e28d';ctx.beginPath();ctx.ellipse(p.x,p.y+8,12,8,0,0,7);ctx.fill();const label=p.boss?'永恩大魔王':'梁石石石';
- // 高饱和度彩色铭牌：BOSS用紫金渐变风格，普通怪用亮橙青色
- ctx.font='bold 17px sans-serif';const labelText=`${label} · ${p.hp}HP`,tw=ctx.measureText(labelText).width,padX=10,bh=27,bw=tw+padX*2,bx=p.x-bw/2,by=p.y-p.r-39;
- ctx.save();ctx.shadowColor=p.boss?'#5b21b6':'#0e7490';ctx.shadowBlur=13;
- const grad=ctx.createLinearGradient(bx,by,bx+bw,by+bh);
- if(p.boss){grad.addColorStop(0,'#ff3cac');grad.addColorStop(.52,'#784bff');grad.addColorStop(1,'#ffb703')}else{grad.addColorStop(0,'#00e5ff');grad.addColorStop(.55,'#00c853');grad.addColorStop(1,'#ffea00')}
- ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(bx,by,bw,bh,9);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=p.boss?'#fff0a6':'#ffffff';ctx.lineWidth=2;ctx.stroke();
- ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=3;ctx.strokeStyle='#30204f';ctx.strokeText(labelText,p.x,by+bh/2);ctx.fillText(labelText,p.x,by+bh/2);ctx.restore();});
- birds.forEach(b=>{if(b.used&&!b.flying)return;ctx.fillStyle='#e43d35';ctx.beginPath();ctx.arc(b.x,b.y,19,0,7);ctx.fill();ctx.fillStyle='white';ctx.beginPath();ctx.arc(b.x+6,b.y-5,6,0,7);ctx.fill();ctx.fillStyle='#222';ctx.beginPath();ctx.arc(b.x+8,b.y-5,2.5,0,7);ctx.fill();ctx.fillStyle='#f4bd3f';ctx.beginPath();ctx.moveTo(b.x+15,b.y);ctx.lineTo(b.x+29,b.y+5);ctx.lineTo(b.x+15,b.y+8);ctx.fill()});
- particles.forEach(p=>{ctx.globalAlpha=p.t/32;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,7,7);ctx.globalAlpha=1});if(won){ctx.fillStyle='#15352bcc';ctx.fillRect(240,160,480,130);ctx.fillStyle='white';ctx.font='bold 34px sans-serif';ctx.fillText(chapter===4?'五章全部通关！':'本章完美通关！',480,215);ctx.font='20px sans-serif';ctx.fillText('校园防线已守护！',480,255)}}
-resetStage(true);
+const BOSS_NAME = '永恩大魔王';
+const GRUNT_NAME = '梁石石石';
+
+const ACH = {
+  firstHit: '🎯 首次命中',
+  combo3: '🔥 三连击',
+  chain: '🪵 连锁倒塌',
+  boss: '👑 击败魔王',
+  clear: '🏆 无作弊通关',
+  stars: '⭐ 三星通关',
+  cheat: '😈 作弊玩家'
+};
+
+/* ========================================================================
+   3. 运行时状态
+   ======================================================================== */
+const state = {
+  chapter: 0, unlocked: 0, birdCount: 5,
+  score: 0, best: 0, stars: [0, 0, 0, 0, 0], ach: {},
+  birds: [], blocks: [], pigs: [], particles: [], texts: [],
+  birdsUsed: 0, combo: 0, comboT: 0, settle: 0,
+  won: false, lost: false, paused: false,
+  cheat: false, cheatTimer: 0,
+  bossClock: 0, bossPulse: 0,
+  shake: 0, soundOn: true, time: 0
+};
+const aim = { on: false, bird: null, pointer: null, pull: 0, dx: 0, dy: 0 };
+
+const canvas = $('game');
+const ctx = canvas.getContext('2d');
+let DPR = 1;
+let bgCanvas = null;
+let rafId = 0, lastT = 0, acc = 0;
+let lastSaveAt = 0, lastBlockSfx = 0, toastTimer = 0;
+
+/* ========================================================================
+   4. 小工具
+   ======================================================================== */
+function roundRectPath(g, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  g.beginPath();
+  g.moveTo(x + rr, y);
+  g.arcTo(x + w, y, x + w, y + h, rr);
+  g.arcTo(x + w, y + h, x, y + h, rr);
+  g.arcTo(x, y + h, x, y, rr);
+  g.arcTo(x, y, x + w, y, rr);
+  g.closePath();
+}
+function circleRect(cx, cy, r, o) {
+  const px = clamp(cx, o.x, o.x + o.w);
+  const py = clamp(cy, o.y, o.y + o.h);
+  let dx = cx - px, dy = cy - py;
+  let d = len(dx, dy);
+  if (d >= r) return null;
+  if (d < 0.001) {
+    const dl = cx - o.x, dr = o.x + o.w - cx, dt = cy - o.y, db = o.y + o.h - cy;
+    const m = Math.min(dl, dr, dt, db);
+    if (m === dl) { dx = -1; dy = 0; }
+    else if (m === dr) { dx = 1; dy = 0; }
+    else if (m === dt) { dx = 0; dy = -1; }
+    else { dx = 0; dy = 1; }
+    d = 1;
+  }
+  return { nx: dx / d, ny: dy / d, depth: r - d, px, py };
+}
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function addText(x, y, str, color, size) {
+  state.texts.push({ x, y, str, color: color || '#fff', size: size || 16, life: 0.9, max: 0.9 });
+  if (state.texts.length > 24) state.texts.shift();
+}
+function spawnBurst(x, y, color, n) {
+  const count = reduceMotion ? Math.ceil(n * 0.45) : n;
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * TAU, sp = rnd(70, 330);
+    state.particles.push({
+      x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 90,
+      life: rnd(0.35, 0.8), max: 0.8, color,
+      size: rnd(3, 8), rot: Math.random() * TAU, spin: rnd(-8, 8)
+    });
+  }
+  if (state.particles.length > 320) state.particles.splice(0, state.particles.length - 320);
+}
+function spawnDust(x, y, n) {
+  for (let i = 0; i < n; i++) {
+    state.particles.push({
+      x: x + rnd(-6, 6), y, vx: rnd(-60, 60), vy: rnd(-120, -20),
+      life: rnd(0.2, 0.45), max: 0.45, color: '#e7d3a8',
+      size: rnd(3, 6), rot: 0, spin: 0
+    });
+  }
+}
+
+/* ========================================================================
+   5. 音效（WebAudio，无外部资源）
+   ======================================================================== */
+let actx = null, master = null;
+function unlockAudio() {
+  if (!state.soundOn) return;
+  if (!actx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      actx = new AC();
+      master = actx.createGain();
+      master.gain.value = 0.5;
+      master.connect(actx.destination);
+    } catch (e) { actx = null; return; }
+  }
+  if (actx.state === 'suspended') { actx.resume().catch(() => {}); }
+}
+function tone(freq, dur, type, vol, to) {
+  if (!state.soundOn || !actx) return;
+  try {
+    const t0 = actx.currentTime;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, t0);
+    if (to) o.frequency.exponentialRampToValueAtTime(Math.max(24, to), t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.16, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(master);
+    o.start(t0); o.stop(t0 + dur + 0.03);
+  } catch (e) {}
+}
+const SFX = {
+  launch() { tone(300, 0.16, 'triangle', 0.16, 90); },
+  block() { tone(180, 0.05, 'square', 0.10, 110); },
+  wood() { tone(110, 0.14, 'square', 0.14, 55); },
+  pig() { tone(520, 0.09, 'triangle', 0.16, 760); },
+  boss() { tone(150, 0.2, 'sawtooth', 0.18, 70); },
+  win() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.3, 'triangle', 0.15), i * 110)); },
+  lose() { tone(320, 0.4, 'sine', 0.16, 110); },
+  click() { tone(620, 0.05, 'square', 0.07, 820); },
+  shock() { tone(80, 0.5, 'sawtooth', 0.18, 35); }
+};
+function blockSfx() {
+  const t = performance.now();
+  if (t - lastBlockSfx > 45) { lastBlockSfx = t; SFX.block(); }
+}
+
+/* ========================================================================
+   6. 存档
+   ======================================================================== */
+function save(force) {
+  const now = performance.now();
+  if (!force && now - lastSaveAt < 1200) return;
+  lastSaveAt = now;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      chapter: state.chapter, unlocked: state.unlocked, score: state.score,
+      best: state.best, birdCount: state.birdCount, sound: state.soundOn,
+      stars: state.stars, ach: state.ach
+    }));
+  } catch (e) {}
+}
+function load() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
+  if (!d) { // 兼容 v14 老存档
+    try {
+      const old = JSON.parse(localStorage.getItem(OLD_KEY) || 'null');
+      if (old) d = { chapter: old.chapter, score: old.score, best: old.bestScore, birdCount: old.birdCount, sound: old.soundOn, ach: old.achievements };
+    } catch (e) {}
+  }
+  if (!d) return;
+  state.chapter = clamp(Number(d.chapter) || 0, 0, LEVELS.length - 1);
+  state.unlocked = clamp(Number(d.unlocked) || 0, 0, LEVELS.length - 1);
+  state.unlocked = Math.max(state.unlocked, Math.min(state.chapter, LEVELS.length - 1));
+  state.score = Math.max(0, Number(d.score) || 0);
+  state.best = Math.max(0, Number(d.best) || 0);
+  state.birdCount = [3, 5, 8].includes(Number(d.birdCount)) ? Number(d.birdCount) : 5;
+  state.soundOn = d.sound !== false;
+  if (Array.isArray(d.stars)) {
+    for (let i = 0; i < 5; i++) state.stars[i] = clamp(Number(d.stars[i]) || 0, 0, 3);
+  }
+  if (d.ach && typeof d.ach === 'object') {
+    for (const k of Object.keys(ACH)) if (d.ach[k]) state.ach[k] = true;
+  }
+}
+
+/* ========================================================================
+   7. 关卡构建 / 回合重置
+   ======================================================================== */
+function makeBird() {
+  return { x: SLING.x, y: SLING.y, r: 19, vx: 0, vy: 0, rot: 0, flying: false, used: false, hit: new Set(), age: 0, rest: 0, power: 0 };
+}
+function buildLevel(i) {
+  const lv = LEVELS[i];
+  state.blocks = lv.blocks.map((s, k) => ({
+    id: 'b' + k, x: s.x, y: s.y, w: s.w, h: s.h,
+    hp: s.hp || 2, maxHp: s.hp || 2,
+    vx: 0, vy: 0, rot: 0, spin: 0, falling: false, dead: false,
+    chain: new Set(), crushed: new Set()
+  }));
+  state.pigs = lv.pigs.map((s, k) => ({
+    id: 'p' + k, x: s.x, y: s.y, r: s.r || 22,
+    hp: s.hp || 1, maxHp: s.hp || 1, boss: !!s.boss,
+    vx: 0, vy: 0, falling: false, dead: false, bob: Math.random() * TAU, flash: 0
+  }));
+  state.particles = [];
+  state.texts = [];
+}
+
+function resetStage(resetScore) {
+  cancelAnimationFrame(rafId); rafId = 0;
+  state.paused = false; state.won = false; state.lost = false;
+  state.settle = 0; state.combo = 0; state.comboT = 0;
+  state.shake = 0; state.bossClock = 0; state.bossPulse = 0;
+  state.cheatTimer = 0; state.birdsUsed = 0;
+  if (resetScore) state.score = 0;
+  aimReset();
+  buildLevel(state.chapter);
+  state.birds = Array.from({ length: state.birdCount }, makeBird);
+
+  const lv = LEVELS[state.chapter];
+  $('chapterLabel').textContent = '第' + (state.chapter + 1) + '章 · ' + lv.name;
+  $('birdCount').textContent = '🐦 每局 ' + state.birdCount + ' 只';
+  $('nextPanel').hidden = true;
+  $('losePanel').hidden = true;
+  $('pause').textContent = '⏸ 暂停';
+  $('pause').setAttribute('aria-pressed', 'false');
+  $('stageTip').classList.remove('hide');
+
+  buildBg();
+  setMessage('瞄准 ' + lv.place + '！按住小鸟向后拖，松手发射。');
+  lastT = 0; acc = 0;
+  syncHud();
+  draw();
+  renderChapters();
+  rafId = requestAnimationFrame(frame);
+}
+
+function setMessage(txt) {
+  const el = $('message');
+  if (el.textContent !== txt) el.textContent = txt;
+}
+
+/* ========================================================================
+   8. 瞄准与发射
+   ======================================================================== */
+function getReadyBird() {
+  let b = state.birds.find(x => !x.used && !x.flying);
+  if (!b && state.cheat) { b = makeBird(); state.birds.push(b); }
+  return b;
+}
+function aimStart(b, p, pointerId) {
+  aim.on = true; aim.bird = b; aim.pointer = pointerId;
+  aim.pull = 0; aim.dx = 0; aim.dy = 0;
+  b.x = SLING.x; b.y = SLING.y;
+  aimMove(p);
+}
+function aimMove(p) {
+  if (!aim.on || !aim.bird) return;
+  let dx = Math.min(0, p.x - SLING.x);   // 只能向后拉，符合弹弓直觉
+  let dy = Math.min(p.y - SLING.y, PULL_FLOOR - SLING.y);  // 皮兜不钻进地面
+  let d = len(dx, dy);
+  if (d > MAX_PULL) { dx *= MAX_PULL / d; dy *= MAX_PULL / d; d = MAX_PULL; }
+  aim.dx = dx; aim.dy = dy; aim.pull = d;
+  aim.bird.x = SLING.x + dx;
+  aim.bird.y = SLING.y + dy;
+}
+function aimReset() {
+  aim.on = false; aim.bird = null; aim.pointer = null;
+  aim.pull = 0; aim.dx = 0; aim.dy = 0;
+}
+function cancelAim() {
+  if (!aim.on) return;
+  if (aim.bird) { aim.bird.x = SLING.x; aim.bird.y = SLING.y; }
+  aimReset();
+  syncHud();
+  draw();
+}
+function launchSpeed(t) {
+  return SPEED_MIN + (SPEED_MAX - SPEED_MIN) * Math.pow(clamp(t, 0, 1), POWER_CURVE);
+}
+function currentShot() {
+  if (!aim.on || aim.pull < 1) return null;
+  const sp = launchSpeed(aim.pull / MAX_PULL);
+  return { x: aim.bird.x, y: aim.bird.y, vx: -aim.dx / aim.pull * sp, vy: -aim.dy / aim.pull * sp };
+}
+function previewPath() {
+  const shot = currentShot();
+  if (!shot) return [];
+  const pts = [];
+  const h = 1 / 60;
+  let x = shot.x, y = shot.y, vx = shot.vx, vy = shot.vy;
+  for (let i = 0; i < 90; i++) {
+    vy += GRAVITY * h;
+    vx *= Math.exp(-AIR_DRAG * h);
+    x += vx * h; y += vy * h;
+    if (i % 3 === 2) pts.push({ x, y });
+    if (y > GROUND - 8 || x > W + 30 || y < -160) break;
+  }
+  return pts;
+}
+function launch() {
+  if (!aim.on || !aim.bird) return;
+  const b = aim.bird;
+  const d = aim.pull;
+  if (d < 16) { cancelAim(); return; }
+  const sp = launchSpeed(d / MAX_PULL);
+  b.x = SLING.x + aim.dx;
+  b.y = SLING.y + aim.dy;
+  b.vx = -aim.dx / d * sp;
+  b.vy = -aim.dy / d * sp;
+  b.flying = true; b.used = true; b.age = 0; b.rest = 0;
+  b.power = d / MAX_PULL;
+  b.hit.clear();
+  state.birdsUsed++;
+  state.shake = Math.max(state.shake, 2.5);
+  addText(b.x, b.y - 30, Math.round(d / MAX_PULL * 100) + '%', '#ffe28a', 14);
+  aimReset();
+  SFX.launch();
+  $('stageTip').classList.add('hide');
+  setMessage('小鸟出击！');
+  if (state.cheat && !state.birds.some(x => !x.used && !x.flying)) state.birds.push(makeBird());
+  syncHud();
+  draw();
+}
+
+/* ========================================================================
+   9. 物理与战斗
+   ======================================================================== */
+function update(h) {
+  state.time += h;
+  updateBirds(h);
+  updateBlocks(h);
+  updatePigs(h);
+  updateBoss(h);
+  updateFx(h);
+  if (state.comboT > 0) { state.comboT -= h; if (state.comboT <= 0) state.combo = 0; }
+  checkEnd(h);
+  if (state.cheat) autoCheat(h);
+}
+
+function updateBirds(h) {
+  for (const b of state.birds) {
+    if (!b.flying) continue;
+    b.age += h;
+    b.vy += GRAVITY * h;
+    b.vx *= Math.exp(-AIR_DRAG * h);
+    b.vy *= Math.exp(-AIR_DRAG * 0.4 * h);
+    b.rot += b.vx * 0.01 * h;
+
+    const sp = len(b.vx, b.vy);
+    const sub = clamp(Math.ceil(sp * h / 7), 1, 14);   // 子步进：防止高速穿透木块
+    const sh = h / sub;
+    for (let s = 0; s < sub && b.flying; s++) {
+      b.x += b.vx * sh;
+      b.y += b.vy * sh;
+      collideBird(b);
+    }
+    if (!b.flying) continue;
+
+    if (b.y + b.r > GROUND) {
+      b.y = GROUND - b.r;
+      if (b.vy > 110) {
+        b.vy = -b.vy * 0.38;
+        b.vx *= 0.78;
+        b.rest = 0;
+        spawnDust(b.x, GROUND - 3, 4);
+        state.shake = Math.max(state.shake, 2);
+      } else {
+        b.vy = 0;
+        b.vx *= Math.exp(-6 * h);
+      }
+    }
+
+    if (Math.abs(b.vx) < 40 && Math.abs(b.vy) < 40) b.rest += h; else b.rest = 0;
+    if (b.rest > 0.45 || b.age > 9 || b.x > W + 120 || b.x < -160 || b.y > H + 160) {
+      b.flying = false;
+      b.vx = 0; b.vy = 0;
+    }
+  }
+  if (state.birds.length > 48) state.birds = state.birds.filter(b => b.flying || !b.used);
+}
+
+function collideBird(b) {
+  const sp = len(b.vx, b.vy);
+  for (const o of state.blocks) {
+    if (o.dead || b.hit.has(o.id)) continue;
+    const hit = circleRect(b.x, b.y, b.r, o);
+    if (!hit) continue;
+    b.hit.add(o.id);
+    b.x += hit.nx * (hit.depth + 0.6);
+    b.y += hit.ny * (hit.depth + 0.6);
+    const vn = b.vx * hit.nx + b.vy * hit.ny;
+    if (vn < 0) {
+      b.vx -= 1.45 * vn * hit.nx;
+      b.vy -= 1.45 * vn * hit.ny;
+      b.vx *= 0.9; b.vy *= 0.9;
+    }
+    damageBlock(o, sp > 760 ? 2 : 1, b.vx, b.vy, sp);
+    state.shake = Math.max(state.shake, Math.min(7, sp * 0.008));
+  }
+  for (const p of state.pigs) {
+    if (p.dead || b.hit.has(p.id)) continue;
+    const dx = b.x - p.x, dy = b.y - p.y, rr = b.r + p.r;
+    const d2 = dx * dx + dy * dy;
+    if (d2 > rr * rr) continue;
+    const d = Math.sqrt(d2) || 0.001;
+    const nx = dx / d, ny = dy / d;
+    b.hit.add(p.id);
+    b.x = p.x + nx * (rr + 0.6);
+    b.y = p.y + ny * (rr + 0.6);
+    const vn = b.vx * nx + b.vy * ny;
+    if (vn < 0) {
+      b.vx -= 1.55 * vn * nx;
+      b.vy -= 1.55 * vn * ny;
+      b.vx *= 0.82; b.vy *= 0.82;
+    }
+    const heavy = p.boss && b.power > 0.8;
+    damagePig(p, heavy ? 2 : 1, 'shot');
+    if (heavy && !p.dead) addText(p.x, p.y - p.r - 40, '💥 重击!', '#ffb703', 18);
+    state.shake = Math.max(state.shake, p.boss ? 10 : 6);
+  }
+}
+
+function blockSupported(o) {
+  if (o.y + o.h >= GROUND - 1) return true;
+  for (const b of state.blocks) {
+    if (b === o || b.dead || b.falling) continue;
+    const ox = Math.min(o.x + o.w, b.x + b.w) - Math.max(o.x, b.x);
+    if (ox > 5 && Math.abs(o.y + o.h - b.y) < 6) return true;
+  }
+  return false;
+}
+
+function updateBlocks(h) {
+  for (const o of state.blocks) {
+    if (o.dead) continue;
+    if (!o.falling) {
+      if (blockSupported(o)) continue;
+      o.falling = true;   // 支撑物没了 → 自由落体
+      o.vy = 0;
+    }
+    o.vy += GRAVITY * 0.62 * h;
+    o.x += o.vx * h;
+    o.y += o.vy * h;
+    o.rot += o.spin * h;
+    o.vx *= Math.exp(-0.5 * h);
+    o.spin *= Math.exp(-1.1 * h);
+
+    if (o.x < 0) { o.x = 0; o.vx = Math.abs(o.vx) * 0.4; }
+    if (o.x + o.w > W) { o.x = W - o.w; o.vx = -Math.abs(o.vx) * 0.4; }
+
+    let landed = false;
+    if (o.vy > 0) {
+      for (const b of state.blocks) {
+        if (b === o || b.dead || b.falling) continue;
+        const ox = Math.min(o.x + o.w, b.x + b.w) - Math.max(o.x, b.x);
+        if (ox < 6) continue;
+        const prevBottom = o.y + o.h - o.vy * h;
+        if (prevBottom <= b.y + 1 && o.y + o.h >= b.y) {
+          o.y = b.y - o.h;
+          if (o.vy > 220) {
+            damageBlock(b, 1, o.vx * 1.5, o.vy, Math.abs(o.vy));
+            unlock('chain');
+            spawnDust(o.x + o.w / 2, b.y, 4);
+          }
+          o.vy = 0; o.vx *= 0.7; o.spin *= 0.55;
+          o.falling = false;
+          landed = true;
+          break;
+        }
+      }
+    }
+    if (!landed && o.y + o.h >= GROUND) {
+      o.y = GROUND - o.h;
+      if (o.vy > 160) {
+        o.vy = -o.vy * 0.16;
+        o.vx *= 0.7;
+        spawnDust(o.x + o.w / 2, GROUND - 3, 4);
+        state.shake = Math.max(state.shake, 2);
+      } else { o.vy = 0; }
+    }
+    if (o.y + o.h >= GROUND - 1 && Math.abs(o.vy) < 14 && Math.abs(o.vx) < 10) {
+      o.falling = false; o.vx = 0; o.vy = 0; o.spin = 0;
+    }
+
+    // 倒下的木块砸到怪物
+    if (o.falling || len(o.vx, o.vy) > 0) {
+      const sp = len(o.vx, o.vy);
+      if (sp > 140) {
+        for (const p of state.pigs) {
+          if (p.dead || o.crushed.has(p.id)) continue;
+          if (circleRect(p.x, p.y, p.r, o)) {
+            o.crushed.add(p.id);
+            damagePig(p, 1, 'crush');
+          }
+        }
+      }
+    }
+  }
+}
+
+function damageBlock(o, dmg, vx, vy, sp) {
+  if (o.dead) return;
+  o.hp -= dmg;
+  if (sp > 240 || o.hp <= 0) {
+    o.falling = true;
+    o.vx += vx * 0.05;
+    o.vy += Math.min(150, vy * 0.06);
+    o.spin += (Math.random() < 0.5 ? -1 : 1) * Math.min(4, sp * 0.0035);
+  }
+  if (o.hp <= 0) { destroyBlock(o); return; }
+  addScore(30);
+  spawnBurst(o.x + o.w / 2, o.y + o.h / 2, '#c98b4e', 5);
+  blockSfx();
+}
+function destroyBlock(o) {
+  if (o.dead) return;
+  o.dead = true; o.hp = 0;
+  addScore(70, o.x + o.w / 2, o.y, '#ffd08a');
+  spawnBurst(o.x + o.w / 2, o.y + o.h / 2, '#b9824b', 12);
+  state.shake = Math.max(state.shake, 4);
+  SFX.wood();
+}
+
+function pigSupported(p) {
+  if (p.y + p.r >= GROUND - 1) return true;
+  for (const o of state.blocks) {
+    if (o.dead || o.falling) continue;
+    if (p.x + p.r > o.x && p.x - p.r < o.x + o.w && Math.abs(p.y + p.r - o.y) < 6) return true;
+  }
+  return false;
+}
+function updatePigs(h) {
+  for (const p of state.pigs) {
+    if (p.dead) continue;
+    if (p.flash > 0) p.flash -= h;
+    if (!p.falling) {
+      if (pigSupported(p)) continue;
+      if (p.y + p.r < GROUND - 1) p.falling = true;
+      else continue;
+    }
+    p.vy += GRAVITY * h;
+    p.x += p.vx * h;
+    p.y += p.vy * h;
+    p.vx *= Math.exp(-0.6 * h);
+
+    let landed = false;
+    for (const b of state.blocks) {
+      if (b.dead || b.falling) continue;
+      const ox = Math.min(p.x + p.r, b.x + b.w) - Math.max(p.x - p.r, b.x);
+      if (ox < 4) continue;
+      const prevBottom = p.y + p.r - p.vy * h;
+      if (p.vy >= 0 && p.y + p.r >= b.y && prevBottom <= b.y + 2) {
+        p.y = b.y - p.r;
+        const impact = p.vy;
+        p.vy = 0; p.vx = 0; p.falling = false;
+        landed = true;
+        if (impact > 620) damagePig(p, 1, 'fall');
+        break;
+      }
+    }
+    if (landed) continue;
+    if (p.y + p.r >= GROUND) {
+      p.y = GROUND - p.r;
+      const impact = p.vy;
+      p.vy = 0; p.vx = 0; p.falling = false;
+      if (impact > 620) damagePig(p, 1, 'fall');
+    }
+  }
+}
+
+function addScore(n, x, y, color) {
+  state.score += n;
+  if (x !== undefined) addText(x, y, '+' + n, color || '#ffe28a', 15);
+}
+function damagePig(p, dmg, source) {
+  if (p.dead) return;
+  p.hp -= dmg;
+  p.flash = 0.22;
+  let mult = 1;
+  if (source === 'shot') {
+    state.combo++;
+    state.comboT = 2.4;
+    if (state.combo >= 3) unlock('combo3');
+    mult = Math.min(5, 1 + Math.floor(state.combo / 2));
+  }
+  const base = p.boss ? 900 : 300;
+  const gain = Math.round(base * mult * (source === 'shot' ? 1 : 0.6));
+  addScore(gain, p.x, p.y - p.r - 16, p.boss ? '#ff9de2' : '#c6f68d');
+  spawnBurst(p.x, p.y, p.boss ? '#c084fc' : '#7bd45b', p.boss ? 16 : 10);
+  state.shake = Math.max(state.shake, p.boss ? 9 : 4);
+  if (navigator.vibrate && source === 'shot') navigator.vibrate(p.boss ? 40 : 15);
+  if (p.boss) SFX.boss(); else SFX.pig();
+  if (p.hp <= 0) killPig(p);
+}
+function killPig(p) {
+  p.dead = true; p.hp = 0;
+  addScore(p.boss ? 500 : 150, p.x, p.y - p.r - 34, '#ffd166');
+  spawnBurst(p.x, p.y, '#ffffff', 14);
+  if (p.boss) {
+    unlock('boss');
+    state.shake = Math.max(state.shake, 12);
+    state.bossPulse = 0;
+  }
+  unlock('firstHit');
+}
+
+function updateBoss(h) {
+  if (state.chapter !== LEVELS.length - 1 || state.won) return;
+  const boss = state.pigs.find(p => p.boss && !p.dead);
+  if (!boss) return;
+  state.bossClock += h;
+  if (state.bossClock > 9) {
+    state.bossClock = 0;
+    bossShock(boss);
+  }
+}
+function bossShock(boss) {
+  state.bossPulse = 1;
+  state.shake = Math.max(state.shake, 8);
+  SFX.shock();
+  for (const b of state.birds) {
+    if (!b.flying) continue;
+    const dx = b.x - boss.x, dy = b.y - boss.y;
+    const d = len(dx, dy) || 1;
+    if (d < 340) { b.vx += dx / d * 220; b.vy += dy / d * 160 - 60; }
+  }
+  addText(boss.x, boss.y - boss.r - 34, '震荡波！', '#ff86e0', 18);
+  spawnBurst(boss.x, boss.y, '#ff4bd8', 16);
+  setMessage('⚡ 永恩大魔王释放震荡波，飞行中的小鸟会被吹偏！');
+}
+
+function updateFx(h) {
+  for (let i = state.particles.length - 1; i >= 0; i--) {
+    const p = state.particles[i];
+    p.x += p.vx * h; p.y += p.vy * h;
+    p.vy += 900 * h;
+    p.rot += p.spin * h;
+    p.life -= h;
+    if (p.life <= 0) state.particles.splice(i, 1);
+  }
+  for (let i = state.texts.length - 1; i >= 0; i--) {
+    const t = state.texts[i];
+    t.y -= 34 * h;
+    t.life -= h;
+    if (t.life <= 0) state.texts.splice(i, 1);
+  }
+  if (state.shake > 0) state.shake = Math.max(0, state.shake - 26 * h);
+  if (state.bossPulse > 0) state.bossPulse = Math.max(0, state.bossPulse - 1.7 * h);
+}
+
+function autoCheat(h) {
+  if (state.won) return;
+  state.cheatTimer += h;
+  let flying = 0;
+  for (const b of state.birds) if (b.flying) flying++;
+  if (state.cheatTimer >= 0.32 && flying < 9) {
+    state.cheatTimer = 0;
+    const b = makeBird();
+    b.used = true; b.flying = true;
+    b.vx = rnd(820, 1080);
+    b.vy = rnd(-520, -60);
+    b.power = 1;
+    state.birds.push(b);
+    state.birdsUsed++;
+    SFX.launch();
+  }
+  if (!state.birds.some(b => !b.used && !b.flying)) state.birds.push(makeBird());
+}
+
+/* ========================================================================
+   10. 胜负判定
+   ======================================================================== */
+function checkEnd(h) {
+  if (state.won) return;
+  if (state.pigs.every(p => p.dead)) { doWin(); return; }
+  if (state.cheat) return;
+  let busy = false, idle = false;
+  for (const b of state.birds) {
+    if (b.flying) busy = true;
+    if (!b.used) idle = true;
+  }
+  if (!busy) for (const o of state.blocks) if (o.falling) { busy = true; break; }
+  if (!busy && !idle) {
+    state.settle += h;
+    if (state.settle > 1.2) doLose();
+  } else {
+    state.settle = 0;
+  }
+}
+
+function doWin() {
+  if (state.won) return;
+  state.won = true;
+  cancelAim();
+  const used = state.birdsUsed;
+  const threeStarLine = Math.max(1, state.birdCount - 2);
+  const stars = state.cheat ? 1 : (used <= threeStarLine ? 3 : 2);
+  const bonus = Math.max(0, state.birdCount - used) * 300;
+  state.score += bonus;
+
+  if (!state.cheat) {
+    if (stars > state.stars[state.chapter]) state.stars[state.chapter] = stars;
+    unlock('clear');
+    if (stars === 3) unlock('stars');
+    const nextIdx = Math.min(LEVELS.length - 1, state.chapter + 1);
+    if (nextIdx > state.unlocked) {
+      state.unlocked = nextIdx;
+      toast('🔓 解锁第 ' + (nextIdx + 1) + ' 章：' + LEVELS[nextIdx].name);
+    }
+  }
+  state.best = Math.max(state.best, state.score);
+  save(true);
+
+  const last = state.chapter === LEVELS.length - 1;
+  $('resultTitle').textContent = last ? '🏆 五章全部通关！' : '🏆 本章通关！';
+  $('starRow').innerHTML = [0, 1, 2].map(i => '<span class="' + (i < stars ? 'on' : '') + '">★</span>').join('');
+  $('resultText').textContent = LEVELS[state.chapter].place + ' 已成功守护！剩余小鸟奖励 +' + bonus + ' 分，总分 ' + state.score + (state.cheat ? '（作弊模式，不计星）' : '');
+  $('nextName').textContent = last ? '你已经是校园守卫英雄了！' : '下一站：第' + (state.chapter + 2) + '章 · ' + LEVELS[state.chapter + 1].name;
+  $('next').textContent = last ? '🔁 再来一局' : '进入下一章 ➜';
+  $('nextPanel').hidden = false;
+  $('nextPanel').scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+  $('stageTip').classList.add('hide');
+  setMessage(last ? '🎉 永恩大魔王被击败，五章全部通关！' : '🎉 本章敌人全部击败！');
+  SFX.win();
+  if (!reduceMotion) {
+    for (let i = 0; i < 60; i++) {
+      state.particles.push({
+        x: rnd(120, 840), y: rnd(-40, 120), vx: rnd(-60, 60), vy: rnd(40, 200),
+        life: rnd(1, 2), max: 2, color: ['#ffd166', '#ff6b9d', '#6bd5ff', '#9dff6b'][i % 4],
+        size: rnd(4, 9), rot: 0, spin: rnd(-6, 6)
+      });
+    }
+  }
+  renderChapters();
+}
+function doLose() {
+  if (state.lost || state.won) return;
+  state.lost = true;
+  save(true);
+  setMessage('😵 小鸟用完了……点“再试一次”，或打开作弊模式。');
+  $('losePanel').hidden = false;
+  $('losePanel').scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+  $('stageTip').classList.add('hide');
+  SFX.lose();
+}
+
+/* ========================================================================
+   11. 主循环
+   ======================================================================== */
+function frame(t) {
+  rafId = 0;
+  if (state.paused) return;
+  const dt = lastT ? Math.min((t - lastT) / 1000, 0.1) : 1 / 60;
+  lastT = t;
+  acc += dt;
+  let guard = 0;
+  while (acc >= STEP && guard < 10) { acc -= STEP; update(STEP); guard++; }
+  if (guard >= 10) acc = 0;
+  draw();
+  syncHud();
+  rafId = requestAnimationFrame(frame);
+}
+
+/* ========================================================================
+   12. 绘制
+   ======================================================================== */
+function drawCloud(g, x, y, s) {
+  g.fillStyle = 'rgba(255,255,255,.86)';
+  g.beginPath();
+  g.arc(x, y, 22 * s, 0, TAU);
+  g.arc(x + 26 * s, y - 9 * s, 28 * s, 0, TAU);
+  g.arc(x + 56 * s, y, 20 * s, 0, TAU);
+  g.fill();
+}
+function tree(g, x, y, s) {
+  g.fillStyle = '#7a5a3a';
+  g.fillRect(x - 5 * s, y - 66 * s, 10 * s, 66 * s);
+  g.fillStyle = '#4f9a52';
+  g.beginPath(); g.arc(x, y - 88 * s, 40 * s, 0, TAU); g.fill();
+  g.beginPath(); g.arc(x - 28 * s, y - 66 * s, 28 * s, 0, TAU); g.fill();
+  g.beginPath(); g.arc(x + 28 * s, y - 66 * s, 28 * s, 0, TAU); g.fill();
+}
+
+function buildBg() {
+  const lv = LEVELS[state.chapter];
+  const c = document.createElement('canvas');
+  c.width = Math.round(W * DPR);
+  c.height = Math.round(H * DPR);
+  const g = c.getContext('2d');
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+  // 天空
+  const sky = g.createLinearGradient(0, 0, 0, GROUND);
+  sky.addColorStop(0, lv.sky[0]);
+  sky.addColorStop(1, lv.sky[1]);
+  g.fillStyle = sky;
+  g.fillRect(0, 0, W, GROUND);
+
+  // 太阳
+  g.globalAlpha = 0.9;
+  g.fillStyle = '#fff8cf';
+  g.beginPath(); g.arc(818, 88, 44, 0, TAU); g.fill();
+  g.globalAlpha = 0.18;
+  g.beginPath(); g.arc(818, 88, 82, 0, TAU); g.fill();
+  g.globalAlpha = 1;
+
+  // 云
+  drawCloud(g, 120, 92, 1);
+  drawCloud(g, 400, 58, 0.8);
+  drawCloud(g, 660, 118, 0.62);
+  drawCloud(g, 250, 158, 0.5);
+
+  // 远山
+  g.fillStyle = 'rgba(110,160,130,.35)';
+  g.beginPath();
+  g.moveTo(0, GROUND);
+  g.quadraticCurveTo(150, GROUND - 105, 380, GROUND);
+  g.quadraticCurveTo(620, GROUND - 135, 960, GROUND);
+  g.lineTo(960, GROUND);
+  g.closePath();
+  g.fill();
+
+  // 地面
+  const gr = g.createLinearGradient(0, GROUND, 0, H);
+  gr.addColorStop(0, lv.ground);
+  gr.addColorStop(1, lv.groundDark);
+  g.fillStyle = gr;
+  g.fillRect(0, GROUND, W, H - GROUND);
+  g.fillStyle = 'rgba(255,255,255,.22)';
+  g.fillRect(0, GROUND, W, 5);
+  g.fillStyle = 'rgba(0,0,0,.07)';
+  for (let x = 12; x < W; x += 46) g.fillRect(x, GROUND + 16, 18, 4);
+
+  // 主题装饰
+  if (lv.decor === 'gate') {
+    g.fillStyle = '#c97a63';
+    g.fillRect(0, GROUND - 66, W, 66);
+    g.fillStyle = 'rgba(0,0,0,.07)';
+    for (let x = 0; x < W; x += 48) g.fillRect(x, GROUND - 66, 4, 66);
+    // 校门门柱与牌匾（远景，位于木制关卡后方）
+    g.fillStyle = '#b25a48';
+    g.fillRect(596, 182, 78, GROUND - 182);
+    g.fillRect(800, 182, 78, GROUND - 182);
+    g.fillStyle = 'rgba(0,0,0,.08)';
+    for (let y = 198; y < GROUND; y += 26) {
+      g.fillRect(596, y, 78, 4);
+      g.fillRect(800, y, 78, 4);
+    }
+    g.fillStyle = '#f4e3b8';
+    g.fillRect(586, 134, 302, 48);
+    g.strokeStyle = '#b08a52';
+    g.lineWidth = 3;
+    g.strokeRect(586, 134, 302, 48);
+    g.fillStyle = '#7c3125';
+    g.font = 'bold 27px "Microsoft YaHei", sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('保定一中', 737, 159);
+    tree(g, 430, GROUND, 1.15);
+    tree(g, 318, GROUND, 0.92);
+  } else if (lv.decor === 'school') {
+    g.fillStyle = '#d8c7a8';
+    g.fillRect(462, 214, 470, 241);
+    g.fillStyle = '#a8493d';
+    g.fillRect(448, 190, 498, 30);
+    g.fillStyle = '#b7a98d';
+    g.fillRect(448, 220, 498, 8);
+    g.fillStyle = '#8fb6c9';
+    for (let r = 0; r < 3; r++) {
+      for (let c2 = 0; c2 < 6; c2++) {
+        g.fillRect(486 + c2 * 72, 248 + r * 58, 40, 34);
+      }
+    }
+    g.fillStyle = '#6d7f88';
+    g.fillRect(690, 366, 46, 89);
+    tree(g, 400, GROUND, 1.2);
+  } else if (lv.decor === 'track') {
+    g.save();
+    g.beginPath();
+    g.rect(0, GROUND, W, H - GROUND);
+    g.clip();
+    g.fillStyle = '#d9774f';
+    g.beginPath();
+    g.ellipse(740, GROUND + 44, 430, 40, 0, 0, TAU);
+    g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.7)';
+    g.lineWidth = 2.5;
+    for (let i = 0; i < 3; i++) {
+      g.beginPath();
+      g.ellipse(740, GROUND + 44, 300 + i * 42, 26 + i * 5, 0, 0, TAU);
+      g.stroke();
+    }
+    g.restore();
+    tree(g, 930, GROUND, 1.05);
+  } else if (lv.decor === 'library') {
+    g.fillStyle = '#b0885f';
+    g.fillRect(872, 210, 78, 245);
+    g.fillStyle = '#8c6642';
+    for (let i = 0; i < 4; i++) g.fillRect(872, 240 + i * 54, 78, 8);
+    const bookColors = ['#d9534f', '#5bc0de', '#f0ad4e', '#5cb85c', '#9b59b6'];
+    for (let i = 0; i < 20; i++) {
+      g.fillStyle = bookColors[i % bookColors.length];
+      const bx = 879 + (i % 6) * 11;
+      const by = 216 + Math.floor(i / 6) * 54;
+      g.fillRect(bx, by, 8, 22);
+    }
+    tree(g, 420, GROUND, 1.1);
+  } else {
+    g.strokeStyle = '#e7edf0';
+    g.lineWidth = 6;
+    g.beginPath(); g.moveTo(410, 455); g.lineTo(410, 170); g.stroke();
+    g.fillStyle = '#e2503f';
+    g.beginPath();
+    g.moveTo(413, 176);
+    g.lineTo(500, 200);
+    g.lineTo(413, 226);
+    g.closePath(); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.16)';
+    for (let x = 20; x < W; x += 60) g.fillRect(x, GROUND + 22, 34, 6);
+    tree(g, 60, GROUND, 1.05);
+  }
+
+  // 地面上的轻阴影，让立体感更强
+  const sh = g.createLinearGradient(0, GROUND - 16, 0, GROUND);
+  sh.addColorStop(0, 'rgba(0,0,0,0)');
+  sh.addColorStop(1, 'rgba(0,0,0,.12)');
+  g.fillStyle = sh;
+  g.fillRect(0, GROUND - 16, W, 16);
+
+  bgCanvas = c;
+}
+
+function drawSling() {
+  ctx.save();
+  ctx.strokeStyle = '#7a4a26';
+  ctx.lineWidth = 13;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(142, 452);
+  ctx.lineTo(168, 331);
+  ctx.lineTo(194, 452);
+  ctx.stroke();
+  ctx.strokeStyle = '#a9713c';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(151, 445);
+  ctx.lineTo(168, 348);
+  ctx.lineTo(185, 445);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawBands() {
+  if (!aim.on || !aim.bird) return;
+  const b = aim.bird;
+  ctx.strokeStyle = '#4a2a15';
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(SLING.x - 11, SLING.y - 8); ctx.lineTo(b.x, b.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(SLING.x + 11, SLING.y - 8); ctx.lineTo(b.x, b.y); ctx.stroke();
+}
+function drawBlocks() {
+  for (const o of state.blocks) {
+    if (o.dead) continue;
+    const dmg = 1 - o.hp / o.maxHp;
+    ctx.save();
+    ctx.translate(o.x + o.w / 2, o.y + o.h / 2);
+    if (o.rot) ctx.rotate(o.rot);
+    ctx.fillStyle = dmg > 0.55 ? '#a9703c' : '#b9824b';
+    ctx.fillRect(-o.w / 2, -o.h / 2, o.w, o.h);
+    ctx.fillStyle = 'rgba(255,255,255,.20)';
+    ctx.fillRect(-o.w / 2 + 3, -o.h / 2 + 3, o.w - 6, 4);
+    ctx.strokeStyle = '#6f4526';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-o.w / 2, -o.h / 2, o.w, o.h);
+    if (dmg > 0.2) {
+      ctx.strokeStyle = 'rgba(64,32,10,.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-o.w * 0.22, -o.h * 0.38);
+      ctx.lineTo(0, -o.h * 0.05);
+      ctx.lineTo(-o.w * 0.14, o.h * 0.26);
+      ctx.stroke();
+      if (dmg > 0.55) {
+        ctx.beginPath();
+        ctx.moveTo(o.w * 0.1, -o.h * 0.4);
+        ctx.lineTo(o.w * 0.24, -o.h * 0.1);
+        ctx.lineTo(o.w * 0.06, o.h * 0.34);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+}
+function drawPigs() {
+  const lv = LEVELS[state.chapter];
+  for (const p of state.pigs) {
+    if (p.dead) continue;
+    const bob = p.boss ? 0 : Math.sin(state.time * 2 + p.bob) * 1.4;
+    ctx.save();
+    ctx.translate(p.x, p.y + bob);
+
+    // 身体
+    const body = ctx.createRadialGradient(-p.r * 0.32, -p.r * 0.36, p.r * 0.15, 0, 0, p.r);
+    if (p.boss) { body.addColorStop(0, '#c084fc'); body.addColorStop(1, '#6a1fb0'); }
+    else { body.addColorStop(0, '#9ce87d'); body.addColorStop(1, '#3f9a3a'); }
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(0, 0, p.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = p.boss ? '#3d0b6b' : '#2b6b28';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 耳朵
+    ctx.fillStyle = p.boss ? '#8b3fd4' : '#4faa47';
+    ctx.beginPath();
+    ctx.moveTo(-p.r * 0.6, -p.r * 0.75);
+    ctx.lineTo(-p.r * 0.2, -p.r * 1.05);
+    ctx.lineTo(-p.r * 0.05, -p.r * 0.6);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(p.r * 0.6, -p.r * 0.75);
+    ctx.lineTo(p.r * 0.2, -p.r * 1.05);
+    ctx.lineTo(p.r * 0.05, -p.r * 0.6);
+    ctx.closePath(); ctx.fill();
+
+    // 眼睛
+    const eyeY = -p.r * 0.3;
+    const eyeX = p.r * 0.38;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-eyeX, eyeY, p.r * 0.22, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(eyeX, eyeY, p.r * 0.22, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#253b28';
+    ctx.beginPath(); ctx.arc(-eyeX + p.r * 0.05, eyeY + 1, p.r * 0.1, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(eyeX + p.r * 0.05, eyeY + 1, p.r * 0.1, 0, TAU); ctx.fill();
+
+    // 受伤表情
+    if (p.flash > 0) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-eyeX - 5, eyeY - 7); ctx.lineTo(-eyeX + 5, eyeY + 3);
+      ctx.moveTo(-eyeX + 5, eyeY - 7); ctx.lineTo(-eyeX - 5, eyeY + 3);
+      ctx.stroke();
+    }
+
+    // 鼻子
+    ctx.fillStyle = p.boss ? '#f0a6ff' : '#a3e28d';
+    ctx.beginPath();
+    ctx.ellipse(0, p.r * 0.32, p.r * 0.4, p.r * 0.28, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = p.boss ? '#7b2fa8' : '#4f9a45';
+    ctx.beginPath(); ctx.arc(-p.r * 0.13, p.r * 0.32, p.r * 0.07, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(p.r * 0.13, p.r * 0.32, p.r * 0.07, 0, TAU); ctx.fill();
+
+    // 王冠
+    if (p.boss) {
+      ctx.fillStyle = '#ffd34d';
+      ctx.beginPath();
+      ctx.moveTo(-p.r * 0.55, -p.r * 0.82);
+      ctx.lineTo(-p.r * 0.34, -p.r * 1.2);
+      ctx.lineTo(-p.r * 0.1, -p.r * 0.9);
+      ctx.lineTo(p.r * 0.12, -p.r * 1.22);
+      ctx.lineTo(p.r * 0.34, -p.r * 0.9);
+      ctx.lineTo(p.r * 0.55, -p.r * 1.18);
+      ctx.lineTo(p.r * 0.5, -p.r * 0.72);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#b07c12';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 名牌 + 血条
+    const name = p.boss ? BOSS_NAME : GRUNT_NAME;
+    ctx.save();
+    ctx.font = 'bold ' + (p.boss ? 14 : 12) + 'px "Microsoft YaHei", system-ui, sans-serif';
+    const tw = ctx.measureText(name).width;
+    const bw = tw + 20, bh = p.boss ? 24 : 21;
+    const bx = p.x - bw / 2, by = p.y - p.r - bh - 14;
+    const grad = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
+    if (p.boss) { grad.addColorStop(0, '#ff3cac'); grad.addColorStop(0.5, '#7b4bff'); grad.addColorStop(1, '#ffb703'); }
+    else { grad.addColorStop(0, '#00c2e0'); grad.addColorStop(0.55, '#12b76a'); grad.addColorStop(1, '#ffe14d'); }
+    ctx.fillStyle = grad;
+    roundRectPath(ctx, bx, by, bw, bh, 8);
+    ctx.fill();
+    ctx.strokeStyle = p.boss ? '#fff0a6' : '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, p.x, by + bh / 2 + 0.5);
+    ctx.restore();
+
+    // 血条
+    const maxHp = p.maxHp;
+    const barY = p.y - p.r - 10;
+    ctx.fillStyle = 'rgba(20,30,40,.55)';
+    roundRectPath(ctx, p.x - 24, barY, 48, 6, 3);
+    ctx.fill();
+    ctx.fillStyle = p.boss ? '#ffb703' : '#35c96b';
+    roundRectPath(ctx, p.x - 24, barY, 48 * clamp(p.hp / maxHp, 0, 1), 6, 3);
+    ctx.fill();
+  }
+}
+function drawBirds() {
+  let ready = null;
+  for (const b of state.birds) { if (!b.used && !b.flying) { ready = b; break; } }
+  for (const b of state.birds) {
+    if (b.used && !b.flying) continue;
+    if (!b.used && !b.flying && b !== ready) continue;  // 待发射的小鸟只画最前面那只
+    const speed = len(b.vx, b.vy);
+    if (b.flying && speed > 700 && !reduceMotion) {
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = '#e6423a';
+      for (let i = 1; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.arc(b.x - b.vx * 0.012 * i, b.y - b.vy * 0.012 * i, b.r * (1 - i * 0.16), 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rot);
+
+    // 尾巴
+    ctx.fillStyle = '#b32d27';
+    ctx.beginPath();
+    ctx.moveTo(-14, -6);
+    ctx.lineTo(-30, -12);
+    ctx.lineTo(-26, 2);
+    ctx.lineTo(-30, 12);
+    ctx.lineTo(-14, 7);
+    ctx.closePath();
+    ctx.fill();
+
+    // 身体
+    const grad = ctx.createRadialGradient(-5, -6, 3, 0, 0, b.r);
+    grad.addColorStop(0, '#ff6b5e');
+    grad.addColorStop(1, '#d8332b');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(0, 0, b.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#9c211c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 肚皮
+    ctx.fillStyle = 'rgba(255,240,220,.85)';
+    ctx.beginPath();
+    ctx.ellipse(0, b.r * 0.42, b.r * 0.5, b.r * 0.34, 0, 0, TAU);
+    ctx.fill();
+
+    // 眼睛
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(b.r * 0.3, -b.r * 0.3, b.r * 0.32, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(b.r * 0.38, -b.r * 0.3, b.r * 0.14, 0, TAU); ctx.fill();
+
+    // 喙
+    ctx.fillStyle = '#f4bd3f';
+    ctx.beginPath();
+    ctx.moveTo(b.r * 0.72, -2);
+    ctx.lineTo(b.r * 1.5, 4);
+    ctx.lineTo(b.r * 0.72, 9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+function drawTrajectory() {
+  if (!aim.on || !aim.bird || aim.pull < 10) return;
+  const pts = previewPath();
+  ctx.save();
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const a = 0.9 - 0.55 * (i / pts.length);
+    ctx.fillStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, i === 0 ? 5 : 4, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawParticles() {
+  for (const p of state.particles) {
+    ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+    ctx.fillStyle = p.color;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawTexts() {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const t of state.texts) {
+    ctx.globalAlpha = clamp(t.life / t.max, 0, 1);
+    ctx.font = 'bold ' + t.size + 'px "Microsoft YaHei", system-ui, sans-serif';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(20,30,40,.65)';
+    ctx.strokeText(t.str, t.x, t.y);
+    ctx.fillStyle = t.color;
+    ctx.fillText(t.str, t.x, t.y);
+  }
+  ctx.globalAlpha = 1;
+}
+function drawShock() {
+  const boss = state.pigs.find(p => p.boss && !p.dead);
+  if (!boss || state.bossPulse <= 0) return;
+  const k = 1 - state.bossPulse;
+  ctx.save();
+  ctx.globalAlpha = state.bossPulse * 0.7;
+  ctx.strokeStyle = '#ff45d4';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.arc(boss.x, boss.y, 40 + k * 260, 0, TAU);
+  ctx.stroke();
+  ctx.globalAlpha = state.bossPulse * 0.35;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(boss.x, boss.y, 20 + k * 200, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawWinOverlay() {
+  if (!state.won) return;
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,224,130,' + (0.10 + Math.sin(state.time * 3) * 0.04) + ')';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(12,36,30,.9)';
+  roundRectPath(ctx, W / 2 - 190, 48, 380, 80, 18);
+  ctx.fill();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffe28a';
+  ctx.font = 'bold 34px "Microsoft YaHei", system-ui, sans-serif';
+  const last = state.chapter === LEVELS.length - 1;
+  ctx.fillText(last ? '五章全部通关！' : '本章通关！', W / 2, 88);
+  ctx.restore();
+}
+function drawPauseOverlay() {
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,22,34,.62)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 40px "Microsoft YaHei", system-ui, sans-serif';
+  ctx.fillText('⏸ 已暂停', W / 2, H / 2 - 12);
+  ctx.font = '16px "Microsoft YaHei", system-ui, sans-serif';
+  ctx.fillStyle = '#cfe3ee';
+  ctx.fillText('点击“继续”或按 P 回到游戏', W / 2, H / 2 + 36);
+  ctx.restore();
+}
+
+function draw() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  if (state.shake > 0.4) {
+    ctx.translate((Math.random() - 0.5) * state.shake, (Math.random() - 0.5) * state.shake);
+  }
+  if (bgCanvas) ctx.drawImage(bgCanvas, 0, 0, W, H);
+  drawSling();
+  drawBands();
+  drawBlocks();
+  drawPigs();
+  drawBirds();
+  drawTrajectory();
+  drawParticles();
+  drawTexts();
+  drawShock();
+  ctx.restore();
+
+  if (state.won) drawWinOverlay();
+  if (state.paused) drawPauseOverlay();
+}
+
+/* ========================================================================
+   13. HUD / 成就 / 章节导航
+   ======================================================================== */
+const hudCache = {};
+function setText(id, val) {
+  if (hudCache[id] === val) return;
+  hudCache[id] = val;
+  const el = $(id);
+  if (el) el.textContent = val;
+}
+function countRemaining() {
+  let n = 0;
+  for (const b of state.birds) if (!b.used) n++;
+  return n;
+}
+function syncHud() {
+  setText('score', String(state.score));
+  setText('birds', state.cheat ? '∞' : String(countRemaining()));
+  setText('comboText', String(state.combo));
+  setText('bestText', '🏆 最高分 ' + state.best);
+  let dead = 0;
+  for (const p of state.pigs) if (p.dead) dead++;
+  setText('progressText', '敌方 ' + dead + '/' + state.pigs.length);
+  const pct = aim.on ? Math.round(aim.pull / MAX_PULL * 100) : 0;
+  setText('powerText', '蓄力 ' + pct + '%');
+  if (hudCache.powerFill !== pct) {
+    hudCache.powerFill = pct;
+    $('powerFill').style.width = pct + '%';
+  }
+  const canFire = aim.on && !state.won && !state.lost;
+  if (hudCache.fireDisabled !== canFire) {
+    hudCache.fireDisabled = canFire;
+    $('fire').disabled = !canFire;
+  }
+  save(false);
+}
+function renderAchievements() {
+  const keys = Object.keys(ACH);
+  const got = keys.filter(k => state.ach[k]).length;
+  $('achievementCount').textContent = got + '/' + keys.length;
+  $('achievementList').innerHTML = keys.map(k =>
+    '<span class="achievement ' + (state.ach[k] ? 'unlocked' : '') + '">' + (state.ach[k] ? '✓ ' : '') + ACH[k] + '</span>'
+  ).join('');
+}
+function unlock(key) {
+  if (!ACH[key] || state.ach[key]) return;
+  state.ach[key] = true;
+  renderAchievements();
+  save(true);
+  toast('🏅 成就解锁：' + ACH[key]);
+  SFX.click();
+}
+function renderChapters() {
+  const nav = $('chapterNav');
+  nav.innerHTML = LEVELS.map((lv, i) => {
+    const locked = i > state.unlocked;
+    const s = state.stars[i] || 0;
+    return '<button class="chap ' + (i === state.chapter ? 'on' : '') + '" data-i="' + i + '"' + (locked ? ' disabled' : '') +
+      ' aria-label="第' + (i + 1) + '章 ' + lv.name + (locked ? '，未解锁' : '') + '">' +
+      '<b>' + (i + 1) + '</b><span>' + (locked ? '🔒' : '★'.repeat(s) + '☆'.repeat(3 - s)) + '</span></button>';
+  }).join('');
+}
+
+/* ========================================================================
+   14. 交互
+   ======================================================================== */
+function toGame(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+}
+canvas.addEventListener('pointerdown', e => {
+  unlockAudio();
+  if (state.paused || state.won) return;
+  if (state.lost && !state.cheat) return;
+  const p = toGame(e);
+  const b = getReadyBird();
+  if (!b) return;
+  const near = len(p.x - b.x, p.y - b.y);
+  if (near > 80 && p.x > SLING.x + 130) return;
+  aimStart(b, p, e.pointerId);
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  e.preventDefault();
+  syncHud();
+});
+canvas.addEventListener('pointermove', e => {
+  if (!aim.on || e.pointerId !== aim.pointer) return;
+  aimMove(toGame(e));
+  e.preventDefault();
+  draw();
+  syncHud();
+});
+canvas.addEventListener('pointerup', e => {
+  if (!aim.on || e.pointerId !== aim.pointer) return;
+  e.preventDefault();
+  if (aim.pull >= 16) launch(); else cancelAim();
+});
+canvas.addEventListener('pointercancel', e => {
+  if (aim.on && e.pointerId === aim.pointer) cancelAim();
+});
+canvas.addEventListener('lostpointercapture', e => {
+  if (aim.on && e.pointerId === aim.pointer) cancelAim();
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+function setPaused(v) {
+  if (state.won && v) return;
+  state.paused = v;
+  $('pause').textContent = v ? '▶ 继续' : '⏸ 暂停';
+  $('pause').setAttribute('aria-pressed', String(v));
+  if (v) {
+    cancelAnimationFrame(rafId); rafId = 0;
+    setMessage('⏸ 已暂停，点击“继续”恢复。');
+    draw();
+  } else {
+    setMessage('继续战斗！');
+    lastT = 0; acc = 0;
+    if (!rafId) rafId = requestAnimationFrame(frame);
+  }
+}
+
+$('fire').onclick = () => { unlockAudio(); launch(); };
+$('pause').onclick = () => { unlockAudio(); SFX.click(); setPaused(!state.paused); };
+$('restart').onclick = () => { unlockAudio(); SFX.click(); resetStage(false); };
+$('newGame').onclick = () => {
+  unlockAudio(); SFX.click();
+  state.chapter = 0; state.score = 0;
+  resetStage(true);
+  save(true);
+  setMessage('🏠 新的一局开始，保卫校园！');
+};
+$('retry').onclick = () => { unlockAudio(); SFX.click(); resetStage(false); };
+$('next').onclick = () => {
+  unlockAudio(); SFX.click();
+  if (state.chapter >= LEVELS.length - 1) {
+    state.chapter = 0; state.score = 0;
+    resetStage(true);
+    save(true);
+  } else {
+    state.chapter++;
+    resetStage(false);
+    save(true);
+  }
+};
+$('sound').onclick = () => {
+  state.soundOn = !state.soundOn;
+  $('sound').textContent = state.soundOn ? '🔊 音效开' : '🔇 音效关';
+  $('sound').setAttribute('aria-pressed', String(state.soundOn));
+  save(true);
+  if (state.soundOn) { unlockAudio(); SFX.click(); }
+};
+$('cheat').onclick = () => {
+  unlockAudio(); SFX.click();
+  state.cheat = !state.cheat;
+  $('cheat').setAttribute('aria-pressed', String(state.cheat));
+  $('cheat').textContent = state.cheat ? '😈 作弊：开' : '😈 作弊：关';
+  if (state.cheat) {
+    unlock('cheat');
+    state.lost = false;
+    $('losePanel').hidden = true;
+    if (state.won) { state.won = false; $('nextPanel').hidden = true; }
+    setMessage('😈 作弊模式开启：小鸟无限连发，再按一次关闭。');
+  } else {
+    setMessage('作弊模式已关闭。');
+  }
+  syncHud();
+  draw();
+};
+$('birdCount').onclick = () => {
+  unlockAudio(); SFX.click();
+  state.birdCount = state.birdCount === 3 ? 5 : state.birdCount === 5 ? 8 : 3;
+  $('birdCount').textContent = '🐦 每局 ' + state.birdCount + ' 只';
+  save(true);
+  resetStage(false);
+  setMessage('已调整为 ' + state.birdCount + ' 只小鸟，本章重新开始！');
+};
+$('chapterNav').addEventListener('click', e => {
+  const btn = e.target.closest('button.chap');
+  if (!btn || btn.disabled) return;
+  const i = Number(btn.dataset.i);
+  if (i === state.chapter) return;
+  unlockAudio(); SFX.click();
+  state.chapter = i;
+  resetStage(false);
+  save(true);
+});
+
+window.addEventListener('keydown', e => {
+  if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (k === ' ' || k === 'enter') {
+    if (aim.on) { e.preventDefault(); launch(); }
+  } else if (k === 'p') {
+    e.preventDefault(); setPaused(!state.paused);
+  } else if (k === 'r') {
+    e.preventDefault(); resetStage(false);
+  } else if (k === 'm') {
+    e.preventDefault(); $('sound').click();
+  } else if (k === 'escape') {
+    cancelAim();
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !state.paused && !state.won) setPaused(true);
+});
+
+let resizeRaf = 0;
+window.addEventListener('resize', () => {
+  if (resizeRaf) return;
+  resizeRaf = requestAnimationFrame(() => {
+    resizeRaf = 0;
+    resize();
+  });
+});
+
+function resize() {
+  DPR = clamp(window.devicePixelRatio || 1, 1, MAX_DPR);
+  canvas.width = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  buildBg();
+  draw();
+}
+
+/* ========================================================================
+   15. 启动
+   ======================================================================== */
+load();
+state.unlocked = clamp(state.unlocked, 0, LEVELS.length - 1);
+$('sound').textContent = state.soundOn ? '🔊 音效开' : '🔇 音效关';
+$('sound').setAttribute('aria-pressed', String(state.soundOn));
+$('birdCount').textContent = '🐦 每局 ' + state.birdCount + ' 只';
+renderAchievements();
+DPR = clamp(window.devicePixelRatio || 1, 1, MAX_DPR);
+canvas.width = Math.round(W * DPR);
+canvas.height = Math.round(H * DPR);
+ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+buildBg();
+resetStage(false);
+if (state.score > 0 || state.chapter > 0) {
+  setMessage('📦 已恢复上次进度：第' + (state.chapter + 1) + '章 · ' + LEVELS[state.chapter].name + '，继续守护校园！');
+}
 })();
-</script></body></html>
+</script>
+</body>
+</html>
