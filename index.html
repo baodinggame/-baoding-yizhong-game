@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#12314a">
-<title>保定一中假期保卫战 v17 · 手感优化版</title>
+<title>保定一中假期保卫战 v18 · 钟楼决战版</title>
 <style>
 :root{--ink:#1c3247;--paper:#f8f3e6;--line:#d9b678;--accent:#e2503f;--gold:#c98a2a;--teal:#2f6079}
 *{box-sizing:border-box}
@@ -85,7 +85,7 @@ footer{text-align:center;color:#87a7bb;font-size:11.5px;margin-top:14px;line-hei
 <main>
   <header>
     <h1>🐦 保定一中假期保卫战</h1>
-    <p class="sub">校园主题弹射闯关 · 五章冒险 · <b>v17 手感 / 性能优化版</b></p>
+    <p class="sub">校园主题弹射闯关 · 五章冒险 · <b>v18 钟楼决战版</b></p>
   </header>
 
   <section class="panel">
@@ -147,7 +147,7 @@ footer{text-align:center;color:#87a7bb;font-size:11.5px;margin-top:14px;line-hei
     </div>
   </section>
 
-  <footer>v17 · 单文件离线小游戏，与学校官方无关 · 存档保存在本机浏览器</footer>
+  <footer>v18 · 单文件离线小游戏，与学校官方无关 · 存档保存在本机浏览器</footer>
 </main>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -169,7 +169,8 @@ const GRAVITY = 1450;                  // 重力加速度(px/s^2)
 const AIR_DRAG = 0.05;                 // 空气阻力系数(每秒)
 const STEP = 1 / 120;                  // 固定物理步长
 const MAX_DPR = 2;
-const SAVE_KEY = 'baoding_yizhong_game_v17';
+const SAVE_KEY = 'baoding_yizhong_game_save_v18';
+const V17_KEY = 'baoding_yizhong_game_v17';
 const OLD_KEY = 'baoding_yizhong_game_save_v14';
 
 const $ = id => document.getElementById(id);
@@ -241,18 +242,23 @@ const LEVELS = [
     ]
   },
   {
-    name: '最终决战', place: '校园中心广场', decor: 'plaza',
-    sky: ['#8792cc', '#ffd3a8'], ground: '#7a9f5c', groundDark: '#4f7040',
+    name: '最终决战', place: '中心广场 · 钟楼', decor: 'clocktower', blockColor: '#96653f',
+    sky: ['#6f7fc4', '#ffcf9e'], ground: '#7a9f5c', groundDark: '#4f7040',
+    // 三座高台：钟楼顶（中）、左露台、右露台 —— 魔王每受一次伤就会瞬移到下一处
+    perches: [[782, 239], [550, 259], [870, 259]],
+    perchNames: ['钟楼顶', '左露台', '右露台'],
     blocks: [
-      { x: 620, y: 405, w: 90, h: 50, hp: 2 },
-      { x: 760, y: 405, w: 90, h: 50, hp: 2 },
-      { x: 690, y: 355, w: 90, h: 50, hp: 2 },
-      { x: 690, y: 305, w: 90, h: 50, hp: 2 }
+      { x: 520, y: 315, w: 44, h: 140, hp: 2 },   // 左露台立柱
+      { x: 478, y: 293, w: 128, h: 22, hp: 2 },   // 左露台平台
+      { x: 760, y: 375, w: 44, h: 80, hp: 2 },    // 钟楼下段
+      { x: 760, y: 295, w: 44, h: 80, hp: 2 },    // 钟楼上段
+      { x: 718, y: 273, w: 104, h: 22, hp: 2 },   // 钟楼平台
+      { x: 876, y: 315, w: 44, h: 140, hp: 2 },   // 右露台立柱
+      { x: 828, y: 293, w: 124, h: 22, hp: 2 }    // 右露台平台
     ],
     pigs: [
-      { x: 545, y: 431, r: 24 },
-      { x: 905, y: 431, r: 24 },
-      { x: 735, y: 275, r: 30, boss: true, hp: 3 }
+      { x: 470, y: 431, r: 24 },
+      { x: 782, y: 239, r: 34, boss: true, hp: 5 }
     ]
   }
 ];
@@ -279,7 +285,7 @@ const state = {
   birdsUsed: 0, combo: 0, comboT: 0, settle: 0,
   won: false, lost: false, paused: false,
   cheat: false, cheatTimer: 0,
-  bossClock: 0, bossPulse: 0,
+  bossClock: 0, bossPulse: 0, bossPhase: 0, bossPort: 0, flash: 0,
   shake: 0, soundOn: true, time: 0
 };
 const aim = { on: false, bird: null, pointer: null, pull: 0, dx: 0, dy: 0 };
@@ -396,6 +402,7 @@ const SFX = {
   win() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.3, 'triangle', 0.15), i * 110)); },
   lose() { tone(320, 0.4, 'sine', 0.16, 110); },
   click() { tone(620, 0.05, 'square', 0.07, 820); },
+  warp() { tone(760, 0.18, 'sawtooth', 0.13, 140); setTimeout(() => tone(180, 0.22, 'triangle', 0.13, 560), 90); },
   shock() { tone(80, 0.5, 'sawtooth', 0.18, 35); }
 };
 function blockSfx() {
@@ -421,6 +428,9 @@ function save(force) {
 function load() {
   let d = null;
   try { d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
+  if (!d) { // 兼容 v17 存档
+    try { d = JSON.parse(localStorage.getItem(V17_KEY) || 'null'); } catch (e) {}
+  }
   if (!d) { // 兼容 v14 老存档
     try {
       const old = JSON.parse(localStorage.getItem(OLD_KEY) || 'null');
@@ -471,6 +481,7 @@ function resetStage(resetScore) {
   state.paused = false; state.won = false; state.lost = false;
   state.settle = 0; state.combo = 0; state.comboT = 0;
   state.shake = 0; state.bossClock = 0; state.bossPulse = 0;
+  state.bossPhase = 0; state.bossPort = 0; state.flash = 0;
   state.cheatTimer = 0; state.birdsUsed = 0;
   if (resetScore) state.score = 0;
   aimReset();
@@ -487,7 +498,9 @@ function resetStage(resetScore) {
   $('stageTip').classList.remove('hide');
 
   buildBg();
-  setMessage('瞄准 ' + lv.place + '！按住小鸟向后拖，松手发射。');
+  setMessage(state.chapter === LEVELS.length - 1
+    ? '🔔 钟楼决战！魔王会在三座高台之间瞬移，每次受击都会换位，注意补刀。'
+    : '瞄准 ' + lv.place + '！按住红色小鸟向后拖，松手发射。');
   lastT = 0; acc = 0;
   syncHud();
   draw();
@@ -676,7 +689,7 @@ function collideBird(b) {
     }
     const heavy = p.boss && b.power > 0.8;
     damagePig(p, heavy ? 2 : 1, 'shot');
-    if (heavy && !p.dead) addText(p.x, p.y - p.r - 40, '💥 重击!', '#ffb703', 18);
+    if (heavy && !p.dead) addText(p.x - 58, p.y - p.r - 34, '💥 重击!', '#ffb703', 18);
     state.shake = Math.max(state.shake, p.boss ? 10 : 6);
   }
 }
@@ -846,16 +859,20 @@ function damagePig(p, dmg, source) {
   }
   const base = p.boss ? 900 : 300;
   const gain = Math.round(base * mult * (source === 'shot' ? 1 : 0.6));
-  addScore(gain, p.x, p.y - p.r - 16, p.boss ? '#ff9de2' : '#c6f68d');
+  addScore(gain, p.x - 58, p.y - p.r - 6, p.boss ? '#ff9de2' : '#c6f68d');
   spawnBurst(p.x, p.y, p.boss ? '#c084fc' : '#7bd45b', p.boss ? 16 : 10);
   state.shake = Math.max(state.shake, p.boss ? 9 : 4);
   if (navigator.vibrate && source === 'shot') navigator.vibrate(p.boss ? 40 : 15);
   if (p.boss) SFX.boss(); else SFX.pig();
-  if (p.hp <= 0) killPig(p);
+  if (p.hp <= 0) {
+    killPig(p);
+  } else if (p.boss && state.chapter === LEVELS.length - 1 && state.bossPort <= 0) {
+    state.bossPort = 0.55;   // 受伤后短暂蓄力，再瞬移到下一座高台
+  }
 }
 function killPig(p) {
   p.dead = true; p.hp = 0;
-  addScore(p.boss ? 500 : 150, p.x, p.y - p.r - 34, '#ffd166');
+  addScore(p.boss ? 500 : 150, Math.min(p.x + 60, W - 56), p.y - p.r - 6, '#ffd166');
   spawnBurst(p.x, p.y, '#ffffff', 14);
   if (p.boss) {
     unlock('boss');
@@ -869,24 +886,50 @@ function updateBoss(h) {
   if (state.chapter !== LEVELS.length - 1 || state.won) return;
   const boss = state.pigs.find(p => p.boss && !p.dead);
   if (!boss) return;
+  // 受伤后的瞬移蓄力
+  if (state.bossPort > 0) {
+    state.bossPort -= h;
+    if (state.bossPort <= 0) { state.bossPort = 0; teleportBoss(boss); }
+    return;
+  }
   state.bossClock += h;
   if (state.bossClock > 9) {
     state.bossClock = 0;
     bossShock(boss);
   }
 }
-function bossShock(boss) {
+function teleportBoss(boss) {
+  const lv = LEVELS[state.chapter];
+  if (!lv.perches || boss.dead) return;
+  spawnBurst(boss.x, boss.y, '#c084fc', 20);
+  state.bossPhase = (state.bossPhase + 1) % lv.perches.length;
+  const to = lv.perches[state.bossPhase];
+  boss.x = to[0];
+  boss.y = to[1];
+  boss.vx = 0; boss.vy = 0; boss.falling = false;
+  boss.flash = 0.3;
+  spawnBurst(boss.x, boss.y, '#ff86e0', 24);
+  state.flash = 1;
+  state.shake = Math.max(state.shake, 9);
+  state.bossClock = 0;
+  SFX.warp();
+  addText(boss.x - boss.r - 36, boss.y - 4, '瞬移！', '#ff86e0', 18);
+  bossShock(boss, true);
+  setMessage('🌀 永恩大魔王瞬移到了' + (lv.perchNames ? lv.perchNames[state.bossPhase] : '高台') + '！');
+}
+function bossShock(boss, quiet) {
   state.bossPulse = 1;
-  state.shake = Math.max(state.shake, 8);
-  SFX.shock();
+  state.shake = Math.max(state.shake, quiet ? 5 : 8);
+  if (!quiet) SFX.shock();
   for (const b of state.birds) {
     if (!b.flying) continue;
     const dx = b.x - boss.x, dy = b.y - boss.y;
     const d = len(dx, dy) || 1;
     if (d < 340) { b.vx += dx / d * 220; b.vy += dy / d * 160 - 60; }
   }
-  addText(boss.x, boss.y - boss.r - 34, '震荡波！', '#ff86e0', 18);
   spawnBurst(boss.x, boss.y, '#ff4bd8', 16);
+  if (quiet) return;
+  addText(boss.x, boss.y - boss.r - 34, '震荡波！', '#ff86e0', 18);
   setMessage('⚡ 永恩大魔王释放震荡波，飞行中的小鸟会被吹偏！');
 }
 
@@ -907,6 +950,7 @@ function updateFx(h) {
   }
   if (state.shake > 0) state.shake = Math.max(0, state.shake - 26 * h);
   if (state.bossPulse > 0) state.bossPulse = Math.max(0, state.bossPulse - 1.7 * h);
+  if (state.flash > 0) state.flash = Math.max(0, state.flash - 2.6 * h);
 }
 
 function autoCheat(h) {
@@ -1166,6 +1210,58 @@ function buildBg() {
       g.fillRect(bx, by, 8, 22);
     }
     tree(g, 420, GROUND, 1.1);
+  } else if (lv.decor === 'clocktower') {
+    // 广场铺装
+    g.fillStyle = 'rgba(255,255,255,.12)';
+    for (let x = 14; x < W; x += 74) g.fillRect(x, GROUND + 16, 44, 5);
+    g.fillStyle = 'rgba(0,0,0,.06)';
+    for (let x = 52; x < W; x += 74) g.fillRect(x, GROUND + 34, 44, 5);
+    // 钟楼塔身
+    g.fillStyle = '#d9b98f';
+    g.fillRect(706, 80, 148, GROUND - 80);
+    g.fillStyle = 'rgba(122,87,52,.14)';
+    for (let y = 100; y < GROUND; y += 34) g.fillRect(706, y, 148, 4);
+    g.fillStyle = 'rgba(90,60,30,.12)';
+    g.fillRect(706, 80, 14, GROUND - 80);
+    g.fillRect(840, 80, 14, GROUND - 80);
+    // 檐口与屋顶
+    g.fillStyle = '#b98f63';
+    g.fillRect(694, 68, 172, 14);
+    g.fillStyle = '#8f4a3f';
+    g.beginPath();
+    g.moveTo(694, 70); g.lineTo(780, 22); g.lineTo(866, 70); g.closePath(); g.fill();
+    g.fillStyle = '#743a31';
+    g.fillRect(776, 10, 8, 14);
+    // 钟面（停在放学时间）
+    g.fillStyle = '#f7ecd6';
+    g.beginPath(); g.arc(780, 118, 29, 0, TAU); g.fill();
+    g.strokeStyle = '#7a5734';
+    g.lineWidth = 4;
+    g.stroke();
+    g.lineWidth = 2;
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * TAU;
+      g.beginPath();
+      g.moveTo(780 + Math.cos(a) * 22, 118 + Math.sin(a) * 22);
+      g.lineTo(780 + Math.cos(a) * 26, 118 + Math.sin(a) * 26);
+      g.stroke();
+    }
+    g.strokeStyle = '#4a3120';
+    g.lineWidth = 4;
+    g.lineCap = 'round';
+    g.beginPath(); g.moveTo(780, 118); g.lineTo(768, 104); g.stroke();
+    g.beginPath(); g.moveTo(780, 118); g.lineTo(800, 130); g.stroke();
+    g.fillStyle = '#4a3120';
+    g.beginPath(); g.arc(780, 118, 3, 0, TAU); g.fill();
+    // 塔身暖光小窗
+    for (const wx of [728, 818]) {
+      g.fillStyle = '#8a6240';
+      g.fillRect(wx, 206, 24, 46);
+      g.fillStyle = '#ffd98a';
+      g.fillRect(wx + 4, 210, 16, 36);
+      g.fillStyle = 'rgba(255,255,255,.5)';
+      g.fillRect(wx + 11, 210, 2, 36);
+    }
   } else {
     g.strokeStyle = '#e7edf0';
     g.lineWidth = 6;
@@ -1220,14 +1316,19 @@ function drawBands() {
   ctx.beginPath(); ctx.moveTo(SLING.x + 11, SLING.y - 8); ctx.lineTo(b.x, b.y); ctx.stroke();
 }
 function drawBlocks() {
+  const base = LEVELS[state.chapter].blockColor || '#b9824b';
   for (const o of state.blocks) {
     if (o.dead) continue;
     const dmg = 1 - o.hp / o.maxHp;
     ctx.save();
     ctx.translate(o.x + o.w / 2, o.y + o.h / 2);
     if (o.rot) ctx.rotate(o.rot);
-    ctx.fillStyle = dmg > 0.55 ? '#a9703c' : '#b9824b';
+    ctx.fillStyle = base;
     ctx.fillRect(-o.w / 2, -o.h / 2, o.w, o.h);
+    if (dmg > 0.55) {
+      ctx.fillStyle = 'rgba(0,0,0,.16)';
+      ctx.fillRect(-o.w / 2, -o.h / 2, o.w, o.h);
+    }
     ctx.fillStyle = 'rgba(255,255,255,.20)';
     ctx.fillRect(-o.w / 2 + 3, -o.h / 2 + 3, o.w - 6, 4);
     ctx.strokeStyle = '#6f4526';
@@ -1537,6 +1638,10 @@ function draw() {
   drawShock();
   ctx.restore();
 
+  if (state.flash > 0) {
+    ctx.fillStyle = 'rgba(190,120,255,' + (state.flash * 0.22).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
   if (state.won) drawWinOverlay();
   if (state.paused) drawPauseOverlay();
 }
